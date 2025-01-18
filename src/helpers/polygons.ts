@@ -16,6 +16,8 @@ for (let x = 1; x <= GRIDSIZE; x++) {
 
 let delaunay = Delaunay.from(points, loc => loc.x, loc => loc.y);
 
+const voronoi = delaunay.voronoi([0, 0, GRIDSIZE, GRIDSIZE]); 
+
 function calculateCentroids(vertexPoints: typeof points, delaunayData: typeof delaunay) {
   const numTriangles = delaunayData.triangles.length / 3;
   let centroids = [];
@@ -80,4 +82,4 @@ map = {
   centers: calculateCentroids(points, delaunay)
 }
 
-export {map, points, nextHalfedge, delaunay, edgesAroundPoint, triangleOfEdge};
+export {map, points, nextHalfedge, delaunay, voronoi, edgesAroundPoint, triangleOfEdge};

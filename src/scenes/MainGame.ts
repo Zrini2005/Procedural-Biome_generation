@@ -1,16 +1,16 @@
 import { Scene } from 'phaser';
 import {
+  delaunay,
   map,
   points,
-  delaunay,
-  nextHalfedge,
-  edgesAroundPoint,
-  triangleOfEdge
+  voronoi,
 } from '../helpers/polygons';
 import sprSand from '../content/sprSand.png';
 import adventurer from '../content/adventurer.webp';
+import sprGrass from '../content/sprGrass.png';
 
 export class MainGame extends Scene {
+  resolution: number = 300;
 
   cameraSpeed: integer;
   mapSize: integer;
@@ -31,10 +31,12 @@ export class MainGame extends Scene {
       frameHeight: 256, // Height of a single frame
     });
     this.load.image("sprSand", sprSand);
+    this.load.image("sprGrass", sprGrass);
 
   }
 
   create() {
+    //#region Animations
     this.anims.create({
       key: 'walk-up',
       frames: this.anims.generateFrameNumbers('adventurer', { start: 0, end: 15, first: 0 }),
@@ -103,6 +105,7 @@ export class MainGame extends Scene {
       frameRate: 20,
       repeat: -1,
     });
+    //#endregion
 
     this.cameraSpeed = 10;
     this.mapSize = 3000;
@@ -110,65 +113,57 @@ export class MainGame extends Scene {
     this.followPoint = new Phaser.Math.Vector2(
       0, 0
     )
-
     this.keyW = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W);
     this.keyA = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A);
     this.keyS = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S);
     this.keyD = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
-    this.player = this.add.sprite(300, 400, 'adventurer');
+    this.player = this.add.sprite(0, 0, 'adventurer');
     this.player.setDepth(10);
     this.player.setScale(0.3); // Adjust player size to fit screen
 
     let graphics = this.add.graphics();
-    const res = 100;
+    const res = this.resolution;
 
-   
-    function drawCellColors(graphics:Phaser.GameObjects.Graphics, voronoiMap: typeof map) {
-      const { triangles, numEdges, centers } = voronoiMap;
-      let seen = new Set();  // of region ids
-      // console.log(numEdges, triangles, centers)
-      graphics.lineStyle(1, 0xFF5733, 1.0);
-      for (let i = 0; i < numEdges; i++) {
-        const r = triangles[nextHalfedge(i)];
-        if (!seen.has(r)) {
-          seen.add(r);
-          let vertices = edgesAroundPoint(delaunay, i).map(i => centers[triangleOfEdge(i)]);
-          graphics.beginPath();
-          graphics.moveTo(vertices[0].x * res, vertices[0].y * res);
-          for (let j = 1; j < vertices.length; j++) {
-            graphics.lineTo(vertices[j].x * res, vertices[j].y * res);
-          }
-          graphics.closePath();
-          graphics.strokePath();
+    // for placing any kind of sprite
+    const placeSprite = (spr: spr, sprKey: string) => {
+      this.add.sprite(spr.x * res, spr.y * res, sprKey);
+    }
+
+    let polygons = voronoi.cellPolygons();
+    function drawVoronoiPolygons(polygons: any, graphics: Phaser.GameObjects.Graphics) {
+      graphics.lineStyle(1, 0x0000FF, 1.0);
+      for (const i of polygons) {
+        graphics.beginPath();
+        graphics.moveTo(i[0][0] * res, i[0][1] * res);
+        for (const j of i) {
+          graphics.lineTo(j[0] * res, j[1] * res);
         }
+        graphics.closePath();
+        graphics.strokePath();
       }
     }
 
-    drawCellColors(graphics, map);
+    drawVoronoiPolygons(polygons, graphics);
 
     interface spr {
       x: number;
       y: number;
     }
 
-    const placeSprite = (spr:spr) => {
-      this.add.sprite(spr.x * res, spr.y * res, "sprSand");
-    }
-
-    function placeSprites(voronoiMap: typeof map) {
+    function placeSandSprites(voronoiMap: typeof map) {
       const { points } = voronoiMap;
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        let spr : spr = {
+        let spr: spr = {
           x: p.x,
           y: p.y
         }
-        placeSprite(spr)
+        placeSprite(spr, "sprSand")
       }
     }
 
-    placeSprites(map)
+    placeSandSprites(map)
   }
 
   update() {
@@ -191,5 +186,11 @@ export class MainGame extends Scene {
     this.cameras.main.centerOn(this.followPoint.x, this.followPoint.y);
     this.player.x = this.followPoint.x;
     this.player.y = this.followPoint.y;
+    let cell = this.getNearestCell(this.player.x, this.player.y);
+    this.add.sprite(points[cell].x * this.resolution, points[cell].y * this.resolution, 'sprGrass'); 
+  }
+
+  getNearestCell(x: number, y: number) {
+    return delaunay.find(x / this.resolution, y / this.resolution);
   }
 }
