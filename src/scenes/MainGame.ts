@@ -4,6 +4,8 @@ import {
   delaunay,
   map,
   voronoi,
+  calculatePolygonData,
+  polygonData,
 } from '../helpers/polygons';
 import sprSand from '../content/sprSand.png';
 import adventurer from '../content/adventurer.webp';
@@ -11,7 +13,7 @@ import sprGrass from '../content/sprGrass.png';
 import { randomWalkGen } from '../helpers/domains';
 
 export class MainGame extends Scene {
-  resolution: number = 100;
+  resolution: number = 1000;
   indices: integer[];
 
   cameraSpeed: integer;
@@ -36,6 +38,7 @@ export class MainGame extends Scene {
     this.load.image("sprGrass", sprGrass);
 
     this.indices = randomWalkGen()
+    console.log(this.indices)
   }
 
   create() {
@@ -135,21 +138,27 @@ export class MainGame extends Scene {
     }
 
 
-    let polygons = voronoi.cellPolygons();
-    function drawVoronoiPolygons(polygons: any, graphics: Phaser.GameObjects.Graphics) {
+    let voronoiPolygons = voronoi.cellPolygons();
+    calculatePolygonData(voronoiPolygons);
+    console.log("polygon Data: ", polygonData, voronoiPolygons);
+
+    function drawVoronoiPolygons(polygons: ReturnType<typeof voronoi.cellPolygons>, graphics: Phaser.GameObjects.Graphics) {
       graphics.lineStyle(1, 0x0000FF, 1.0);
-      for (const i of polygons) {
+      console.log(polygonData)
+      for (const singlePolygon of polygonData) {
+        const i = singlePolygon.reducedVertices
         graphics.beginPath();
-        graphics.moveTo(i[0][0] * res, i[0][1] * res);
+        console.log(i);
+        graphics.moveTo(i[0].x * res, i[0].y * res);
         for (const j of i) {
-          graphics.lineTo(j[0] * res, j[1] * res);
+          graphics.lineTo(j.x * res, j.y * res);
         }
         graphics.closePath();
         graphics.strokePath();
       }
     }
 
-    drawVoronoiPolygons(polygons, graphics);
+    drawVoronoiPolygons(voronoiPolygons, graphics);
 
     interface spr {
       x: number;

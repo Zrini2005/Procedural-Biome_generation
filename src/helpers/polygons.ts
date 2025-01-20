@@ -1,4 +1,5 @@
 import { Delaunay } from 'd3-delaunay';
+import { randomWalkGen } from './domains';
 
 const GRIDSIZE = 7;
 const JITTER = 0.5;
@@ -17,6 +18,73 @@ for (let x = 1; x <= GRIDSIZE; x++) {
 let delaunay = Delaunay.from(points, loc => loc.x, loc => loc.y);
 
 const voronoi = delaunay.voronoi([0, 0, GRIDSIZE, GRIDSIZE]);
+const voronoiPolygons = voronoi.cellPolygons();
+
+let indices = randomWalkGen();
+
+interface polygonVertices {
+  x: number,
+  y: number
+}
+
+let polygonData: {
+  index: number,
+  polygonIndex: number,
+  vertices: polygonVertices[],
+  reducedVertices: polygonVertices[]
+}[] = [];
+
+function addPolygonIndices(polygons: typeof polygonData) {
+  for (let i = 0; i < polygons.length; i++) {
+    const polygonIndex = indices[i];
+    polygonData[i].polygonIndex = polygonIndex;
+  }
+}
+
+function calculateReducedVertices(polygons: typeof polygonData) {
+  for (let i = 0; i < polygons.length; i++) {
+    let centroid = { x: 0, y: 0 };
+    for (let j = 0; j < polygons[i].vertices.length; j++) {
+      centroid.x += Number(polygons[i].vertices[j].x);
+      centroid.y += Number(polygons[i].vertices[j].y);
+    }
+    centroid.x /= polygons[i].vertices.length;
+    centroid.y /= polygons[i].vertices.length;
+
+    let reducedVertices = [];
+    for (let j = 0; j < polygons[i].vertices.length; j++) {
+      const vertex = polygons[i].vertices[j];
+      const newX = centroid.x + (vertex.x - centroid.x) * 0.75;
+      const newY = centroid.y + (vertex.y - centroid.y) * 0.75;
+      reducedVertices.push({ x: newX, y: newY });
+    }
+    polygonData[i].reducedVertices = reducedVertices;
+  }
+}
+
+function calculatePolygonData(polygons: typeof voronoiPolygons) {
+  let i = 0;
+  const polygonArray = Array.from(polygons)
+  for (let i in indices) {
+    const index = indices[i];
+    let vertices =[];
+    for ( let j = 0; j < polygonArray[index].length; j++ ) {
+      vertices.push({x: Number(polygonArray[index][j][0]), y: Number(polygonArray[index][j][1])});
+    }
+    polygonData.push({index: Number(i), polygonIndex: 0, vertices: vertices, reducedVertices: []});
+  }
+  for (let polygon in polygons) {
+    let vertices = [];
+    for (let i = 0; i < polygon.length; i++) {
+      vertices.push({ x: Number(polygon[i][0]), y: Number(polygon[i][1]) });
+    }
+    polygonData.push({ index: i, polygonIndex: 0, vertices: vertices, reducedVertices: [] });
+    i++;
+  }
+  addPolygonIndices(polygonData)
+  calculateReducedVertices(polygonData)
+}
+
 
 function calculateCentroids(vertexPoints: typeof points, delaunayData: typeof delaunay) {
   const numTriangles = delaunayData.triangles.length / 3;
@@ -44,4 +112,4 @@ let map = {
   centers: calculateCentroids(points, delaunay)
 };
 
-export { map, points, delaunay, voronoi };
+export { map, points, delaunay, voronoi, calculatePolygonData, polygonData };
