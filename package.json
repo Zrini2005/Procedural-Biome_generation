@@ -26,6 +26,7 @@
         "vite": "^5.3.1"
     },
     "dependencies": {
+        "@leodeslf/perlin-noise": "^1.1.2",
         "d3-delaunay": "^6.0.4",
         "phaser": "^3.87.0",
         "simplex-noise": "^4.0.3"
