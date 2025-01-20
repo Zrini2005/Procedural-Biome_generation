@@ -1,16 +1,18 @@
 import { Scene } from 'phaser';
 import {
+  points,
   delaunay,
   map,
-  points,
   voronoi,
 } from '../helpers/polygons';
 import sprSand from '../content/sprSand.png';
 import adventurer from '../content/adventurer.webp';
 import sprGrass from '../content/sprGrass.png';
+import { randomWalkGen } from '../helpers/domains';
 
 export class MainGame extends Scene {
-  resolution: number = 300;
+  resolution: number = 100;
+  indices: integer[];
 
   cameraSpeed: integer;
   mapSize: integer;
@@ -33,6 +35,7 @@ export class MainGame extends Scene {
     this.load.image("sprSand", sprSand);
     this.load.image("sprGrass", sprGrass);
 
+    this.indices = randomWalkGen()
   }
 
   create() {
@@ -107,18 +110,19 @@ export class MainGame extends Scene {
     });
     //#endregion
 
+    const startingCoords = [300, 300]
     this.cameraSpeed = 10;
     this.mapSize = 3000;
     this.cameras.main.setZoom(1);
     this.followPoint = new Phaser.Math.Vector2(
-      0, 0
+      startingCoords[0], startingCoords[1]
     )
     this.keyW = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W);
     this.keyA = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A);
     this.keyS = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S);
     this.keyD = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
-    this.player = this.add.sprite(0, 0, 'adventurer');
+    this.player = this.add.sprite(startingCoords[0], startingCoords[1], 'adventurer');
     this.player.setDepth(10);
     this.player.setScale(0.3); // Adjust player size to fit screen
 
@@ -129,6 +133,7 @@ export class MainGame extends Scene {
     const placeSprite = (spr: spr, sprKey: string) => {
       this.add.sprite(spr.x * res, spr.y * res, sprKey);
     }
+
 
     let polygons = voronoi.cellPolygons();
     function drawVoronoiPolygons(polygons: any, graphics: Phaser.GameObjects.Graphics) {
@@ -151,19 +156,18 @@ export class MainGame extends Scene {
       y: number;
     }
 
-    function placeSandSprites(voronoiMap: typeof map) {
-      const { points } = voronoiMap;
-      for (let i = 0; i < points.length; i++) {
-        const p = points[i];
+    const placeSandSprites = () => {
+      for (let i of this.indices) {
         let spr: spr = {
-          x: p.x,
-          y: p.y
+          x: points[i].x,
+          y: points[i].y
         }
         placeSprite(spr, "sprSand")
       }
     }
 
-    placeSandSprites(map)
+    placeSandSprites()
+
   }
 
   update() {
@@ -187,10 +191,13 @@ export class MainGame extends Scene {
     this.player.x = this.followPoint.x;
     this.player.y = this.followPoint.y;
     let cell = this.getNearestCell(this.player.x, this.player.y);
-    this.add.sprite(points[cell].x * this.resolution, points[cell].y * this.resolution, 'sprGrass'); 
+    if (this.indices.includes(cell)) {
+      this.add.sprite(points[cell].x * this.resolution, points[cell].y * this.resolution, 'sprGrass');
+    }
   }
 
   getNearestCell(x: number, y: number) {
+    console.log(delaunay.find(x / this.resolution, y / this.resolution));
     return delaunay.find(x / this.resolution, y / this.resolution);
   }
 }

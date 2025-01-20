@@ -1,6 +1,6 @@
 import { Delaunay } from 'd3-delaunay';
 
-const GRIDSIZE = 6;
+const GRIDSIZE = 7;
 const JITTER = 0.5;
 let points: { x: number, y: number }[] = [];
 
@@ -16,7 +16,7 @@ for (let x = 1; x <= GRIDSIZE; x++) {
 
 let delaunay = Delaunay.from(points, loc => loc.x, loc => loc.y);
 
-const voronoi = delaunay.voronoi([0, 0, GRIDSIZE, GRIDSIZE]); 
+const voronoi = delaunay.voronoi([0, 0, GRIDSIZE, GRIDSIZE]);
 
 function calculateCentroids(vertexPoints: typeof points, delaunayData: typeof delaunay) {
   const numTriangles = delaunayData.triangles.length / 3;
@@ -44,42 +44,4 @@ let map = {
   centers: calculateCentroids(points, delaunay)
 };
 
-
-function triangleOfEdge(e: number) { return Math.floor(e / 3); }
-function nextHalfedge(e: number) { return (e % 3 === 2) ? e - 2 : e + 1; }
-
-
-function edgesAroundPoint(delaunayData: typeof delaunay, start: number) {
-  const result = [];
-  let incoming = start;
-  do {
-    result.push(incoming);
-    const outgoing = nextHalfedge(incoming);
-    incoming = delaunayData.halfedges[outgoing];
-  } while (incoming !== -1 && incoming !== start);
-  return result;
-}
-
-
-points.push({ x: -10, y: GRIDSIZE / 2 });
-points.push({ x: GRIDSIZE + 10, y: GRIDSIZE / 2 });
-points.push({ y: -10, x: GRIDSIZE / 2 });
-points.push({ y: GRIDSIZE + 10, x: GRIDSIZE / 2 });
-points.push({ x: -10, y: -10 });
-points.push({ x: GRIDSIZE + 10, y: GRIDSIZE + 10 });
-points.push({ y: -10, x: GRIDSIZE + 10 });
-points.push({ y: GRIDSIZE + 10, x: -10 });
-
-// draw the same thing at the top of the page, but with boundary points
-delaunay = Delaunay.from(points, loc => loc.x, loc => loc.y);
-map = {
-  points,
-  numRegions: points.length,
-  numTriangles: delaunay.halfedges.length / 3,
-  numEdges: delaunay.halfedges.length,
-  halfedges: delaunay.halfedges,
-  triangles: delaunay.triangles,
-  centers: calculateCentroids(points, delaunay)
-}
-
-export {map, points, nextHalfedge, delaunay, voronoi, edgesAroundPoint, triangleOfEdge};
+export { map, points, delaunay, voronoi };
