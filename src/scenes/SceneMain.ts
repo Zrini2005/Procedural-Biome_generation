@@ -20,7 +20,7 @@ import tree2 from '../content/tree2.png';
 import tree3 from '../content/tree3.png';
 import lootbox from '../content/lootbox-closed.webp';
 import sprHighland from '../content/sprHighland.png';
-import { randomWalkGen } from '../helpers/domains'; 
+import { randomWalkGen } from '../helpers/domains';
 
 
 
@@ -77,7 +77,7 @@ export class SceneMain extends Phaser.Scene {
             frameHeight: 256, // Height of a single frame
         });
         this.indices = randomWalkGen()
-         
+
 
 
     }
@@ -132,7 +132,7 @@ export class SceneMain extends Phaser.Scene {
         this.mapSize = 1000;
         this.chunkSize = 16;
         this.tileSize = 16;
-        this.cameraSpeed = 50;
+        this.cameraSpeed = 1000;
         const polygons = voronoi.cellPolygons();
         calculatePolygonData(polygons);
 
@@ -142,14 +142,15 @@ export class SceneMain extends Phaser.Scene {
             vertex.reducedVertices = vertex.reducedVertices.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
             vertex.lootBoxesCoordinates = vertex.lootBoxesCoordinates.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
         });
-        console.log(polygonData); 
+        console.log(polygonData);
 
 
-        this.cameras.main.setZoom(1);
+        this.cameras.main.setZoom(2);
         this.followPoint = new Phaser.Math.Vector2(
-            10583.679779291666,10854.282121798213
+            10583.679779291666, 10854.282121798213
         );
-      
+
+
 
         this.chunks = [];
 
@@ -161,61 +162,67 @@ export class SceneMain extends Phaser.Scene {
         }
         const middleChunkX = Math.floor(this.mapSize / 2);
         const middleChunkY = Math.floor(this.mapSize / 2);
-         
+
 
         // Add collision between player and collidable objects
-         
 
-        this.player = this.add.sprite(10583.679779291666,10854.282121798213, 'adventurer');
+
+        this.player = this.add.sprite(10583.679779291666, 10854.282121798213, 'adventurer');
         //this.player.setPosition(1, 1);
         this.physics.world.enable(this.player);
-        
- 
+
+
+
 
 
         this.player.setDepth(10);
-        this.player.setScale(0.3); // Adjust player size to fit screen
-        
+        this.player.setScale(0.3);
+        if (this.player.body) {
+            (this.player.body as Phaser.Physics.Arcade.Body).setSize(this.player.width * 0.3, this.player.height * 0.5);
+            (this.player.body as Phaser.Physics.Arcade.Body).setOffset(this.player.width * 0.35, this.player.height * 0.35);
+        }
+         
+        this.player.x = 10583.679779291666;
+        this.player.y = 10854.282121798213;
+
+
         this.collidableObjects = this.physics.add.group();
-        const tree = this.physics.add.sprite(11000,11000, 'tree1');
+        const tree = this.physics.add.sprite(11000, 11000, 'tree1');
         tree.setDepth(10);
-        //tree.setImmovable(true);
-        this.physics.world.enable(tree);
-        
-    tree.body.setSize(tree.width  , tree.height ); // Resize physics body
-    this.collidableObjects.add(tree);
-    this.physics.world.drawDebug = true;
-this.physics.world.debugGraphic.clear();
+        tree.setPushable(false);
 
-// Add collider with debug log
-this.physics.add.collider(this.player, this.collidableObjects, () => {
-    console.log('Collision detected!');
-});
-  
-    
-     
+        tree.body.setSize(tree.width, tree.height); // Resize physics body
+        this.collidableObjects.add(tree);
+        this.physics.world.drawDebug = true;
+        this.physics.world.debugGraphic.clear();
 
-    // Debugging: Log collidable objects
-    console.log('Collidable Objects:', this.collidableObjects.getChildren());
+        // Add collider with debug log
+        this.physics.add.collider(this.player, this.collidableObjects);
+
+
+
+
+        // Debugging: Log collidable objects
+        console.log('Collidable Objects:', this.collidableObjects.getChildren());
 
         this.placeDungeonAtPolygonCenters();
         this.addLootBoxes();
-        
+
     }
     addToCollidableObjects(object: Phaser.GameObjects.GameObject) {
-         
+
         this.collidableObjects.add(object); // Add the object to the collidable group
     }
     addLootBoxes() {
         const minDistance = 1000; // Minimum allowed distance between loot boxes
-    
+
         for (let polygon of this.vertices) {
             const validLootBoxes: { x: number; y: number }[] = [];
-    
+
             for (let lootBox of polygon.lootBoxesCoordinates) {
                 // Check distance with existing valid loot boxes
                 let isFarEnough = true;
-    
+
                 for (let existing of validLootBoxes) {
                     const distance = Phaser.Math.Distance.Between(lootBox.x, lootBox.y, existing.x, existing.y);
                     if (distance < minDistance) {
@@ -223,10 +230,10 @@ this.physics.add.collider(this.player, this.collidableObjects, () => {
                         break;
                     }
                 }
-    
+
                 if (isFarEnough) {
                     validLootBoxes.push(lootBox);
-    
+
                     // Add loot box sprite to the scene
                     const lootBoxSprite = this.add.sprite(lootBox.x, lootBox.y, "lootbox");
                     lootBoxSprite.setOrigin(0.5, 0.5);
@@ -234,15 +241,15 @@ this.physics.add.collider(this.player, this.collidableObjects, () => {
                     lootBoxSprite.setDepth(9.5);
                 }
             }
-     
+
         }
     }
-    
+
 
     placeDungeonAtPolygonCenters() {
         for (let polygon of this.vertices) {
             const center = this.calculateAverageCenter(polygon.reducedVertices);
-    
+
             // Check if a dungeon already exists for this polygon
             const existingDungeon = this.children.getByName(`dungeon-${polygon.polygonIndex}`);
             if (!existingDungeon) {
@@ -259,12 +266,12 @@ this.physics.add.collider(this.player, this.collidableObjects, () => {
     calculateAverageCenter(vertices: { x: number; y: number }[]): { x: number; y: number } {
         let xSum = 0;
         let ySum = 0;
-    
+
         for (const vertex of vertices) {
             xSum += vertex.x;
             ySum += vertex.y;
         }
-    
+
         const vertexCount = vertices.length;
         return {
             x: xSum / vertexCount,
@@ -275,16 +282,16 @@ this.physics.add.collider(this.player, this.collidableObjects, () => {
 
     isWithinBounds(chunkX: number, chunkY: number): { withinBounds: boolean; biomeType?: string } {
 
- 
+
         const chunkCenterX = chunkX * this.chunkSize * this.tileSize;
         const chunkCenterY = chunkY * this.chunkSize * this.tileSize;
- 
+
         for (let polygon of this.vertices) {
             if (this.point_in_polygon({ x: chunkCenterX, y: chunkCenterY }, polygon.reducedVertices)) {
-                var type; 
+                var type;
 
-                if(polygon.polygonIndex  === 24){
-                    type = "home"; 
+                if (polygon.polygonIndex === 24) {
+                    type = "home";
                 }
                 else if (polygon.index >= 10) {
                     type = "sand";
@@ -344,8 +351,8 @@ this.physics.add.collider(this.player, this.collidableObjects, () => {
 
     update() {
 
-        var snappedChunkX = (this.chunkSize * this.tileSize) * Math.round(this.followPoint.x / (this.chunkSize * this.tileSize));
-        var snappedChunkY = (this.chunkSize * this.tileSize) * Math.round(this.followPoint.y / (this.chunkSize * this.tileSize));
+        var snappedChunkX = (this.chunkSize * this.tileSize) * Math.round(this.player.x / (this.chunkSize * this.tileSize));
+        var snappedChunkY = (this.chunkSize * this.tileSize) * Math.round(this.player.y / (this.chunkSize * this.tileSize));
 
         snappedChunkX = snappedChunkX / this.chunkSize / this.tileSize;
         snappedChunkY = snappedChunkY / this.chunkSize / this.tileSize;
@@ -353,21 +360,21 @@ this.physics.add.collider(this.player, this.collidableObjects, () => {
         for (var x = snappedChunkX - 2; x < snappedChunkX + 2; x++) {
             for (var y = snappedChunkY - 2; y < snappedChunkY + 2; y++) {
                 const result = this.isWithinBounds(x, y);
-                if (result.withinBounds){
-                var existingChunk = this.getChunk(x, y);
-                if (existingChunk == null) {
-                    let newChunk: Biome2 | HomeMap | Biome1;
-                    if (result.biomeType === 'grass') {
-                        newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
-                    } else if (result.biomeType === 'home'){
-                        newChunk = new HomeMap(this, x, y, this.chunkSize, this.tileSize);
+                if (result.withinBounds) {
+                    var existingChunk = this.getChunk(x, y);
+                    if (existingChunk == null) {
+                        let newChunk: Biome2 | HomeMap | Biome1;
+                        if (result.biomeType === 'grass') {
+                            newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
+                        } else if (result.biomeType === 'home') {
+                            newChunk = new HomeMap(this, x, y, this.chunkSize, this.tileSize);
 
-                    }else {
-                        newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
+                        } else {
+                            newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
+                        }
+                        this.chunks.push(newChunk);
                     }
-                    this.chunks.push(newChunk);
                 }
-            }
 
             }
         }
@@ -392,30 +399,43 @@ this.physics.add.collider(this.player, this.collidableObjects, () => {
             }
         }
 
+        if (this.player && this.player.body instanceof Phaser.Physics.Arcade.Body) {
+            if (this.keyW.isDown) {
+                this.player.body.setVelocityY(-this.cameraSpeed);
+                this.player.body.setVelocityX(0);
 
-        if (this.keyW.isDown) {
-            this.followPoint.y -= this.cameraSpeed;
-            this.player.play('walk-up', true);
-        } else if (this.keyS.isDown) {
-            this.followPoint.y += this.cameraSpeed;
-            this.player.play('walk-down', true);
-        } else if (this.keyA.isDown) {
-            this.followPoint.x -= this.cameraSpeed;
-            this.player.play('walk-left', true);
-        } else if (this.keyD.isDown) {
-            this.followPoint.x += this.cameraSpeed;
-            this.player.play('walk-right', true);
-        } else {
-            this.player.play('idle', true);
+                this.player.play('walk-up', true);
+            } else if (this.keyS.isDown) {
+                this.player.body.setVelocityY(this.cameraSpeed)
+                this.player.body.setVelocityX(0);
+
+                this.player.play('walk-down', true);
+            } else if (this.keyA.isDown) {
+                this.player.body.setVelocityX(-this.cameraSpeed)
+                this.player.body.setVelocityY(0);
+
+                this.player.play('walk-left', true);
+            } else if (this.keyD.isDown) {
+                this.player.body.setVelocityX(this.cameraSpeed)
+                this.player.body.setVelocityY(0);
+
+                this.player.play('walk-right', true);
+            } else {
+                this.player.body.setVelocityX(0);
+                this.player.body.setVelocityY(0);
+            }
+            if (!this.keyW.isDown && !this.keyS.isDown && !this.keyA.isDown && !this.keyD.isDown) {
+                this.player.body.setVelocityX(0);
+                this.player.body.setVelocityY(0);
+                this.player.play('idle', true);
+            }
         }
 
-        console.log(this.followPoint.x, this.followPoint.y);
+        console.log(this.player.x, this.player.y);
 
 
 
-        this.cameras.main.centerOn(this.followPoint.x, this.followPoint.y);
-        this.player.x = this.followPoint.x;
-        this.player.y = this.followPoint.y;
+        this.cameras.main.centerOn(this.player.x, this.player.y);
     }
 
 

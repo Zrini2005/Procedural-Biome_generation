@@ -100,10 +100,11 @@ class Biome1 {
 
                     const scaleX = 0.05 + this.tileSize / assetWidth;
                     const scaleY = 0.05 + this.tileSize / assetHeight;
-                    var tree = new Phaser.GameObjects.Sprite(this.scene, grassTile.x + 8, grassTile.y + 8, treeType); // Centered on the tile
+                    var tree = this.scene.physics.add.sprite(grassTile.x + 8, grassTile.y + 8, treeType);
                     tree.setOrigin(0.5, 1);  
                     tree.setDepth(8); 
                     tree.setScale(scaleX, scaleY); 
+                    tree.setPushable(false);  
                     this.scene.addToCollidableObjects(tree) 
                     this.tiles.add(tree);
                     this.scene.add.existing(tree);
