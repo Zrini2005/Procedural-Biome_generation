@@ -10,7 +10,13 @@ const config: Types.Core.GameConfig = {
   width: window.innerWidth,
   height: window.innerHeight,
   parent: 'game-container',
-  backgroundColor: "#000000",
+  backgroundColor: "#90EE90",
+  physics: {
+    default: 'arcade',
+    arcade: {
+        debug: true, // Enable debug visuals
+    },
+},
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH

@@ -32,6 +32,7 @@ let polygonData: {
   polygonIndex: number,
   vertices: polygonVertices[],
   reducedVertices: polygonVertices[]
+  lootBoxesCoordinates: polygonVertices[]
 }[] = [];
 
 function addPolygonIndices(polygons: typeof polygonData) {
@@ -71,18 +72,40 @@ function calculatePolygonData(polygons: typeof voronoiPolygons) {
     for ( let j = 0; j < polygonArray[index].length; j++ ) {
       vertices.push({x: Number(polygonArray[index][j][0]), y: Number(polygonArray[index][j][1])});
     }
-    polygonData.push({index: Number(i), polygonIndex: 0, vertices: vertices, reducedVertices: []});
+    polygonData.push({index: Number(i), polygonIndex: 0, vertices: vertices, reducedVertices: [], lootBoxesCoordinates: []});
   }
   for (let polygon in polygons) {
     let vertices = [];
     for (let i = 0; i < polygon.length; i++) {
       vertices.push({ x: Number(polygon[i][0]), y: Number(polygon[i][1]) });
     }
-    polygonData.push({ index: i, polygonIndex: 0, vertices: vertices, reducedVertices: [] });
+    polygonData.push({ index: i, polygonIndex: 0, vertices: vertices, reducedVertices: [], lootBoxesCoordinates: [] });
     i++;
   }
   addPolygonIndices(polygonData)
   calculateReducedVertices(polygonData)
+  lootboxCoordinates(polygonData)
+}
+
+function lootboxCoordinates(polygons: typeof polygonData) {
+  for (let i = 0; i < polygons.length; i++) {
+    let centroid = { x: 0, y: 0 };
+    for (let j = 0; j < polygons[i].vertices.length; j++) {
+      centroid.x += Number(polygons[i].vertices[j].x);
+      centroid.y += Number(polygons[i].vertices[j].y);
+    }
+    centroid.x /= polygons[i].vertices.length;
+    centroid.y /= polygons[i].vertices.length;
+
+    let reducedVertices = [];
+    for (let j = 0; j < polygons[i].vertices.length; j++) {
+      const vertex = polygons[i].vertices[j];
+      const newX = centroid.x + (vertex.x - centroid.x) * 0.5;
+      const newY = centroid.y + (vertex.y - centroid.y) * 0.5;
+      reducedVertices.push({ x: newX, y: newY });
+    }
+    polygonData[i].lootBoxesCoordinates = reducedVertices;
+  }
 }
 
 

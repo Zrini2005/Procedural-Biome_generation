@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Biome2 } from './biome2'; // Add this line to import Biome2
+import { HomeMap } from './homeMap'; // Add this line to import HomeMap 
 import { Biome1 } from './Entities'; // Add this line to import Biome1
 import { calculatePolygonData, polygonData, voronoi } from '../helpers/polygons';
 import sprSand from '../content/sprSand.png';
@@ -17,13 +18,15 @@ import icedLake from '../content/icedLake.png';
 import tree1 from '../content/tree1.png';
 import tree2 from '../content/tree2.png';
 import tree3 from '../content/tree3.png';
+import lootbox from '../content/lootbox-closed.webp';
 import sprHighland from '../content/sprHighland.png';
-import { randomWalkGen } from '../helpers/domains';
+import { randomWalkGen } from '../helpers/domains'; 
 
 
 
 export class SceneMain extends Phaser.Scene {
-    resolution: number = 1000;
+    resolution: number = 3000;
+    collidableObjects: Phaser.Physics.Arcade.Group;
 
     mapSize: number;
     chunkSize: number;
@@ -34,6 +37,7 @@ export class SceneMain extends Phaser.Scene {
         polygonIndex: number,
         vertices: { x: number, y: number }[],
         reducedVertices: { x: number, y: number }[]
+        lootBoxesCoordinates: { x: number, y: number }[]
     }[];
     chunks: any[]; // Add this line to declare the chunks property
     followPoint: Phaser.Math.Vector2; // Declare followPoint property
@@ -45,7 +49,7 @@ export class SceneMain extends Phaser.Scene {
     indices: integer[]; // Declare indices property
 
     constructor() {
-        super({ key: "SceneMain" });
+        super({ key: "SceneMain", physics: { arcade: {} } });
 
     }
 
@@ -59,6 +63,7 @@ export class SceneMain extends Phaser.Scene {
         this.load.image("tree1", tree1);
         this.load.image("tree2", tree2);
         this.load.image("tree3", tree3);
+        this.load.image("lootbox", lootbox);
         this.load.image("sprNewTry", sprHighland);
         this.load.image("smallHouse", smallHouse);
         this.load.image('dungeon', dungeon);
@@ -72,6 +77,7 @@ export class SceneMain extends Phaser.Scene {
             frameHeight: 256, // Height of a single frame
         });
         this.indices = randomWalkGen()
+         
 
 
     }
@@ -134,51 +140,16 @@ export class SceneMain extends Phaser.Scene {
         this.vertices.forEach(vertex => {
             vertex.vertices = vertex.vertices.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
             vertex.reducedVertices = vertex.reducedVertices.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
+            vertex.lootBoxesCoordinates = vertex.lootBoxesCoordinates.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
         });
-        console.log(polygonData);
-
-        // this.vertices = [
-        //     {
-        //         type: "sand",
-        //         vertices: [
-        //             { x: 0, y: 0 },
-        //             { x: 3000, y: 0 },
-        //             { x: 0, y: 3000 }
-
-        //         ],
-        //     },
-        //     {
-        //         type: "grass",
-        //         vertices: [
-        //             { x: 0, y: 3000 },
-        //             { x: 0, y: 6000 },
-        //             { x: 3000, y: 6000 }
-        //         ],
-        //     },
-        //     {
-        //         type: "grass",
-        //         vertices: [
-        //             { x: 3000, y: 0 },
-        //             { x: 6000, y: 0 },
-        //             { x: 6000, y: 3000 }
-        //         ]
-        //     },
-        //     {
-        //         type: "sand",
-        //         vertices: [
-        //             { x: 6000, y: 3000 },
-        //             { x: 6000, y: 6000 },
-        //             { x: 3000, y: 6000 }
-        //         ],
-        //     }
-        // ]; 
+        console.log(polygonData); 
 
 
-        this.cameras.main.setZoom(2);
+        this.cameras.main.setZoom(1);
         this.followPoint = new Phaser.Math.Vector2(
-            this.mapSize / 2,
-            this.mapSize / 2
+            10583.679779291666,10854.282121798213
         );
+      
 
         this.chunks = [];
 
@@ -190,39 +161,132 @@ export class SceneMain extends Phaser.Scene {
         }
         const middleChunkX = Math.floor(this.mapSize / 2);
         const middleChunkY = Math.floor(this.mapSize / 2);
+         
 
-        this.player = this.add.sprite(middleChunkX, middleChunkY, 'adventurer');
+        // Add collision between player and collidable objects
+         
+
+        this.player = this.add.sprite(10583.679779291666,10854.282121798213, 'adventurer');
         //this.player.setPosition(1, 1);
+        this.physics.world.enable(this.player);
+        
+ 
+
 
         this.player.setDepth(10);
         this.player.setScale(0.3); // Adjust player size to fit screen
+        
+        this.collidableObjects = this.physics.add.group();
+        const tree = this.physics.add.sprite(11000,11000, 'tree1');
+        tree.setDepth(10);
+        //tree.setImmovable(true);
+        this.physics.world.enable(tree);
+        
+    tree.body.setSize(tree.width  , tree.height ); // Resize physics body
+    this.collidableObjects.add(tree);
+    this.physics.world.drawDebug = true;
+this.physics.world.debugGraphic.clear();
 
-        const dungeonRadius = 20;
-        const randomAngle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-        const randomDistance = Phaser.Math.FloatBetween(0, dungeonRadius);
+// Add collider with debug log
+this.physics.add.collider(this.player, this.collidableObjects, () => {
+    console.log('Collision detected!');
+});
+  
+    
+     
 
-        // Convert polar to Cartesian coordinates
-        const dungeonX = this.player.x + Math.cos(randomAngle) * randomDistance;
-        const dungeonY = this.player.y + Math.sin(randomAngle) * randomDistance;
+    // Debugging: Log collidable objects
+    console.log('Collidable Objects:', this.collidableObjects.getChildren());
 
-        // Add the dungeon sprite
-        const dungeon = this.add.sprite(dungeonX, dungeonY, "dungeon");
-        dungeon.setOrigin(0.5, 0.5);
-        dungeon.setScale(0.5);
-        dungeon.setDepth(9.5);
+        this.placeDungeonAtPolygonCenters();
+        this.addLootBoxes();
+        
     }
+    addToCollidableObjects(object: Phaser.GameObjects.GameObject) {
+         
+        this.collidableObjects.add(object); // Add the object to the collidable group
+    }
+    addLootBoxes() {
+        const minDistance = 1000; // Minimum allowed distance between loot boxes
+    
+        for (let polygon of this.vertices) {
+            const validLootBoxes: { x: number; y: number }[] = [];
+    
+            for (let lootBox of polygon.lootBoxesCoordinates) {
+                // Check distance with existing valid loot boxes
+                let isFarEnough = true;
+    
+                for (let existing of validLootBoxes) {
+                    const distance = Phaser.Math.Distance.Between(lootBox.x, lootBox.y, existing.x, existing.y);
+                    if (distance < minDistance) {
+                        isFarEnough = false;
+                        break;
+                    }
+                }
+    
+                if (isFarEnough) {
+                    validLootBoxes.push(lootBox);
+    
+                    // Add loot box sprite to the scene
+                    const lootBoxSprite = this.add.sprite(lootBox.x, lootBox.y, "lootbox");
+                    lootBoxSprite.setOrigin(0.5, 0.5);
+                    lootBoxSprite.setScale(1.5);
+                    lootBoxSprite.setDepth(9.5);
+                }
+            }
+     
+        }
+    }
+    
+
+    placeDungeonAtPolygonCenters() {
+        for (let polygon of this.vertices) {
+            const center = this.calculateAverageCenter(polygon.reducedVertices);
+    
+            // Check if a dungeon already exists for this polygon
+            const existingDungeon = this.children.getByName(`dungeon-${polygon.polygonIndex}`);
+            if (!existingDungeon) {
+                const dungeon = this.add.sprite(center.x, center.y, "dungeon");
+                dungeon.setOrigin(0.5, 0.5);
+                dungeon.setScale(0.5);
+                dungeon.setDepth(9.5);
+                dungeon.name = `dungeon-${polygon.polygonIndex}`; // Unique identifier
+                console.log(`Dungeon placed at polygon ${polygon.polygonIndex} center (${center.x}, ${center.y})`);
+            }
+        }
+    }
+
+    calculateAverageCenter(vertices: { x: number; y: number }[]): { x: number; y: number } {
+        let xSum = 0;
+        let ySum = 0;
+    
+        for (const vertex of vertices) {
+            xSum += vertex.x;
+            ySum += vertex.y;
+        }
+    
+        const vertexCount = vertices.length;
+        return {
+            x: xSum / vertexCount,
+            y: ySum / vertexCount,
+        };
+    }
+
+
     isWithinBounds(chunkX: number, chunkY: number): { withinBounds: boolean; biomeType?: string } {
 
-
-        // Check if the chunk is within the boundaries of any biome (centered at each vertex)
+ 
         const chunkCenterX = chunkX * this.chunkSize * this.tileSize;
         const chunkCenterY = chunkY * this.chunkSize * this.tileSize;
-
-        // Check if the chunk falls within any square biome boundary
+ 
         for (let polygon of this.vertices) {
             if (this.point_in_polygon({ x: chunkCenterX, y: chunkCenterY }, polygon.reducedVertices)) {
-                var type;
-                if (polygon.index >= 10) {
+                var type; 
+
+                if(polygon.polygonIndex  === 24){
+                    type = "home"; 
+                }
+                else if (polygon.index >= 10) {
                     type = "sand";
                 }
                 else {
@@ -289,16 +353,21 @@ export class SceneMain extends Phaser.Scene {
         for (var x = snappedChunkX - 2; x < snappedChunkX + 2; x++) {
             for (var y = snappedChunkY - 2; y < snappedChunkY + 2; y++) {
                 const result = this.isWithinBounds(x, y);
-                if (!result.withinBounds) continue;
+                if (result.withinBounds){
                 var existingChunk = this.getChunk(x, y);
                 if (existingChunk == null) {
+                    let newChunk: Biome2 | HomeMap | Biome1;
                     if (result.biomeType === 'grass') {
-                        var newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
-                    } else {
-                        var newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
+                        newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
+                    } else if (result.biomeType === 'home'){
+                        newChunk = new HomeMap(this, x, y, this.chunkSize, this.tileSize);
+
+                    }else {
+                        newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
                     }
                     this.chunks.push(newChunk);
                 }
+            }
 
             }
         }
@@ -318,7 +387,7 @@ export class SceneMain extends Phaser.Scene {
             }
             else {
                 if (chunk !== null) {
-                    //chunk.unload();
+                    chunk.unload();
                 }
             }
         }
