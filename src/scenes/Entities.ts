@@ -1,4 +1,4 @@
-import Phaser from 'phaser'; 
+import Phaser from 'phaser';
 import Perlin from '../helpers/perlin';
 import { SceneMain } from './SceneMain';
 
@@ -23,7 +23,7 @@ class Biome1 {
         this.isLoaded = false;
         this.occupiedAreas = [];
         this.perlin = new Perlin();
-        
+
     }
 
     unload() {
@@ -84,9 +84,9 @@ class Biome1 {
             // Step 2: Place trees on grass tiles
             grassTiles.forEach(grassTile => {
                 var treeNoise = this.perlin.perlin2(grassTile.x / 50, grassTile.y / 50); // Use finer noise for tree placement
-                if (treeNoise > 0.2 && !this.isNearDungeon(grassTile.x, grassTile.y) && !this.isNearLootBox(grassTile.x, grassTile.y)) {
+                if (treeNoise > 0.5) {
                     var treeType;
-                    if (treeNoise <= 0.3) {
+                    if (treeNoise <= 0.6) {
                         treeType = "tree1";
                     } else if (treeNoise <= 0.4) {
                         treeType = "tree2";
@@ -101,11 +101,11 @@ class Biome1 {
                     const scaleX = 0.05 + this.tileSize / assetWidth;
                     const scaleY = 0.05 + this.tileSize / assetHeight;
                     var tree = this.scene.physics.add.sprite(grassTile.x + 8, grassTile.y + 8, treeType);
-                    tree.setOrigin(0.5, 1);  
-                    tree.setDepth(8); 
-                    tree.setScale(scaleX, scaleY); 
-                    tree.setPushable(false);  
-                    this.scene.addToCollidableObjects(tree) 
+                    tree.setOrigin(0.5, 1);
+                    tree.setDepth(8);
+                    tree.setScale(scaleX, scaleY);
+                    tree.setPushable(false);
+                    this.scene.addToCollidableObjects(tree)
                     this.tiles.add(tree);
                     this.scene.add.existing(tree);
                 }
@@ -116,11 +116,14 @@ class Biome1 {
                 if (assetNoise > 0.2 && !this.isNearDungeon(waterTile.x, waterTile.y) && !this.isNearLootBox(waterTile.x, waterTile.y)) {
                     var assetType;
                     if (assetNoise <= 0.5) {
-                        assetType = "bush";
+                        assetType = "sprSand";
+                        // assetType = "bush";
                     } else if (assetNoise <= 0.6) {
-                        assetType = "icedLake";
+                        assetType = "sprSand";
+                        // assetType = "icedLake";
                     } else {
-                        assetType = "icedLake";
+                        assetType = "sprSand";
+                        // assetType = "icedLake";
                     }
                     const assetWidth = this.scene.textures.get(assetType).getSourceImage().width;
                     const assetHeight = this.scene.textures.get(assetType).getSourceImage().height;

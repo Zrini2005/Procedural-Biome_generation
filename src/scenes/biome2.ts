@@ -148,6 +148,7 @@ class Biome2 {
             this.isLoaded = true;
         }
     }
+    
     placeAssetOnSand(worldX: number, worldY: number) {
         const hashValue = this.hash(worldX, worldY);
         const tileSize = this.tileSize;
