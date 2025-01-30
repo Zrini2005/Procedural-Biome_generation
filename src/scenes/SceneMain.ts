@@ -5,6 +5,7 @@ import { Biome1 } from './Entities'; // Add this line to import Biome1
 import { calculatePolygonData, polygonData, voronoi } from '../helpers/polygons';
 import sprSand from '../content/sprSand.png';
 import adventurer from '../content/adventurer.webp';
+import grassSpr from '../content/grassSpr.png'
 import sprGrass from '../content/sprGrass.png';
 import asset1 from '../content/asset1.png';
 import asset2 from '../content/asset2.png';
@@ -21,6 +22,8 @@ import tree3 from '../content/tree3.png';
 import lootbox from '../content/lootbox-closed.webp';
 import sprHighland from '../content/sprHighland.png';
 import { randomWalkGen } from '../helpers/domains';
+import grassbase from '../content/grassbase.png';
+import bushSpr from '../content/bushSpr.png';
 
 
 
@@ -59,12 +62,14 @@ export class SceneMain extends Phaser.Scene {
             frameHeight: 16
         });
         this.load.image("sprSand", sprSand);
-        this.load.image("sprGrass", sprGrass);
+        // this.load.image("sprGrass", sprGrass);
+        this.load.image("sprGrass", grassSpr);
         this.load.image("tree1", tree1);
         this.load.image("tree2", tree2);
         this.load.image("tree3", tree3);
         this.load.image("lootbox", lootbox);
-        this.load.image("sprNewTry", sprHighland);
+        // this.load.image("sprNewTry", sprNewTry);
+        this.load.image("sprNewTry", bushSpr);
         this.load.image("smallHouse", smallHouse);
         this.load.image('dungeon', dungeon);
         this.load.image("bush", mountain_landscape);
@@ -76,6 +81,7 @@ export class SceneMain extends Phaser.Scene {
             frameWidth: 256, // Width of a single frame
             frameHeight: 256, // Height of a single frame
         });
+        this.load.image("grassbase", grassbase);
         this.indices = randomWalkGen()
 
 
@@ -150,8 +156,6 @@ export class SceneMain extends Phaser.Scene {
             10583.679779291666, 10854.282121798213
         );
 
-
-
         this.chunks = [];
 
         if (this.input.keyboard) {
@@ -181,7 +185,7 @@ export class SceneMain extends Phaser.Scene {
             (this.player.body as Phaser.Physics.Arcade.Body).setSize(this.player.width * 0.3, this.player.height * 0.5);
             (this.player.body as Phaser.Physics.Arcade.Body).setOffset(this.player.width * 0.35, this.player.height * 0.35);
         }
-         
+
         this.player.x = 10583.679779291666;
         this.player.y = 10854.282121798213;
 
@@ -281,8 +285,6 @@ export class SceneMain extends Phaser.Scene {
 
 
     isWithinBounds(chunkX: number, chunkY: number): { withinBounds: boolean; biomeType?: string } {
-
-
         const chunkCenterX = chunkX * this.chunkSize * this.tileSize;
         const chunkCenterY = chunkY * this.chunkSize * this.tileSize;
 
@@ -306,7 +308,9 @@ export class SceneMain extends Phaser.Scene {
 
         return { withinBounds: false };
     }
+
     point_in_polygon(point: { x: number; y: number }, polygon: { x: number; y: number }[]): boolean {
+
         const num_vertices = polygon.length;
         var x = point.x;
         var y = point.y;
@@ -335,9 +339,6 @@ export class SceneMain extends Phaser.Scene {
         return inside;
     }
 
-
-
-
     getChunk(x: number, y: number) {
         var chunk = null;
         for (var i = 0; i < this.chunks.length; i++) {
@@ -347,7 +348,6 @@ export class SceneMain extends Phaser.Scene {
         }
         return chunk;
     }
-
 
     update() {
 
@@ -365,7 +365,8 @@ export class SceneMain extends Phaser.Scene {
                     if (existingChunk == null) {
                         let newChunk: Biome2 | HomeMap | Biome1;
                         if (result.biomeType === 'grass') {
-                            newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
+                            // newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
+                            newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
                         } else if (result.biomeType === 'home') {
                             newChunk = new HomeMap(this, x, y, this.chunkSize, this.tileSize);
 
@@ -431,7 +432,7 @@ export class SceneMain extends Phaser.Scene {
             }
         }
 
-        console.log(this.player.x, this.player.y);
+        // console.log(this.player.x, this.player.y);
 
 
 
