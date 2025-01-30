@@ -3,7 +3,7 @@ import { Tile } from './Entities';
 import { createNoise2D } from 'simplex-noise';
 const noise2D = createNoise2D(() =>10);
  
-class HomeMap {
+class Biome4 {
     scene: Phaser.Scene;
     x: number;
     y: number;
@@ -55,11 +55,12 @@ class HomeMap {
                     //   waterTiles.push({ x: tileX, y: tileY });
                     // }
                     if (perlinValue < 0.1) {
-                        key = "icedLake";
+                        key = "sprNewTry";
                     } else if (perlinValue >= 0.1 && perlinValue < 0.2) {
-                        key = "icedLake";
+                        key = "sprNewTry";
+
                     } else if (perlinValue >= 0.2) {
-                        key = "icedLake";
+                        key = "sprNewTry";
                     }
 
                     // Add the main tile sprite
@@ -214,4 +215,4 @@ class HomeMap {
     }
 
 }
-export { HomeMap };
+export { Biome4 };

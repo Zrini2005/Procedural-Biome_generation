@@ -33,6 +33,7 @@ let polygonData: {
   vertices: polygonVertices[],
   reducedVertices: polygonVertices[]
   lootBoxesCoordinates: polygonVertices[]
+  gradientAreaCoordinates: polygonVertices[]
 }[] = [];
 
 function addPolygonIndices(polygons: typeof polygonData) {
@@ -72,20 +73,44 @@ function calculatePolygonData(polygons: typeof voronoiPolygons) {
     for ( let j = 0; j < polygonArray[index].length; j++ ) {
       vertices.push({x: Number(polygonArray[index][j][0]), y: Number(polygonArray[index][j][1])});
     }
-    polygonData.push({index: Number(i), polygonIndex: 0, vertices: vertices, reducedVertices: [], lootBoxesCoordinates: []});
+    polygonData.push({index: Number(i), polygonIndex: 0, vertices: vertices, reducedVertices: [], lootBoxesCoordinates: [], gradientAreaCoordinates: []});
   }
   for (let polygon in polygons) {
     let vertices = [];
     for (let i = 0; i < polygon.length; i++) {
       vertices.push({ x: Number(polygon[i][0]), y: Number(polygon[i][1]) });
     }
-    polygonData.push({ index: i, polygonIndex: 0, vertices: vertices, reducedVertices: [], lootBoxesCoordinates: [] });
+    polygonData.push({ index: i, polygonIndex: 0, vertices: vertices, reducedVertices: [], lootBoxesCoordinates: [], gradientAreaCoordinates: [] });
     i++;
   }
   addPolygonIndices(polygonData)
   calculateReducedVertices(polygonData)
   lootboxCoordinates(polygonData)
+  gradientAreaCoordinates(polygonData)
 }
+
+
+function gradientAreaCoordinates(polygons: typeof polygonData) {
+  for (let i = 0; i < polygons.length; i++) {
+    let centroid = { x: 0, y: 0 };
+    for (let j = 0; j < polygons[i].vertices.length; j++) {
+      centroid.x += Number(polygons[i].vertices[j].x);
+      centroid.y += Number(polygons[i].vertices[j].y);
+    }
+    centroid.x /= polygons[i].vertices.length;
+    centroid.y /= polygons[i].vertices.length;
+
+    let reducedVertices = [];
+    for (let j = 0; j < polygons[i].vertices.length; j++) {
+      const vertex = polygons[i].vertices[j];
+      const newX = centroid.x + (vertex.x - centroid.x) * 0.83;
+      const newY = centroid.y + (vertex.y - centroid.y) * 0.83;
+      reducedVertices.push({ x: newX, y: newY });
+    }
+    polygonData[i].gradientAreaCoordinates = reducedVertices;
+  }
+}
+
 
 function lootboxCoordinates(polygons: typeof polygonData) {
   for (let i = 0; i < polygons.length; i++) {
@@ -100,8 +125,8 @@ function lootboxCoordinates(polygons: typeof polygonData) {
     let reducedVertices = [];
     for (let j = 0; j < polygons[i].vertices.length; j++) {
       const vertex = polygons[i].vertices[j];
-      const newX = centroid.x + (vertex.x - centroid.x) * 0.5;
-      const newY = centroid.y + (vertex.y - centroid.y) * 0.5;
+      const newX = centroid.x + (vertex.x - centroid.x) * 0.3;
+      const newY = centroid.y + (vertex.y - centroid.y) * 0.3;
       reducedVertices.push({ x: newX, y: newY });
     }
     polygonData[i].lootBoxesCoordinates = reducedVertices;

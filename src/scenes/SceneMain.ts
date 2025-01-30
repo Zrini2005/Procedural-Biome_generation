@@ -21,6 +21,9 @@ import tree3 from '../content/tree3.png';
 import lootbox from '../content/lootbox-closed.webp';
 import sprHighland from '../content/sprHighland.png';
 import { randomWalkGen } from '../helpers/domains';
+import { Biome2Border } from './biome2Border';
+import { HomeMapBorder } from './homeMapBorder';
+import { Biome1Border } from './biome1Border';
 
 
 
@@ -38,6 +41,7 @@ export class SceneMain extends Phaser.Scene {
         vertices: { x: number, y: number }[],
         reducedVertices: { x: number, y: number }[]
         lootBoxesCoordinates: { x: number, y: number }[]
+        gradientAreaCoordinates: { x: number, y: number }[]
     }[];
     chunks: any[]; // Add this line to declare the chunks property
     followPoint: Phaser.Math.Vector2; // Declare followPoint property
@@ -130,7 +134,7 @@ export class SceneMain extends Phaser.Scene {
 
 
         this.mapSize = 1000;
-        this.chunkSize = 16;
+        this.chunkSize = 4;
         this.tileSize = 16;
         this.cameraSpeed = 1000;
         const polygons = voronoi.cellPolygons();
@@ -141,11 +145,12 @@ export class SceneMain extends Phaser.Scene {
             vertex.vertices = vertex.vertices.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
             vertex.reducedVertices = vertex.reducedVertices.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
             vertex.lootBoxesCoordinates = vertex.lootBoxesCoordinates.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
+            vertex.gradientAreaCoordinates = vertex.gradientAreaCoordinates.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
         });
         console.log(polygonData);
 
 
-        this.cameras.main.setZoom(2);
+        this.cameras.main.setZoom(1);
         this.followPoint = new Phaser.Math.Vector2(
             10583.679779291666, 10854.282121798213
         );
@@ -302,6 +307,21 @@ export class SceneMain extends Phaser.Scene {
                 }
                 return { withinBounds: true, biomeType: type };
             }
+            else if(this.point_in_polygon({ x: chunkCenterX, y: chunkCenterY }, polygon.gradientAreaCoordinates)){
+                var type;
+
+                if (polygon.polygonIndex === 24) {
+                    type = "homeBorder";
+                }
+                else if (polygon.index >= 10) {
+                    type = "sandBorder";
+                }
+                else {
+                    type = "grassBorder";
+
+                }
+                return { withinBounds: true, biomeType: type };
+            }
         }
 
         return { withinBounds: false };
@@ -357,21 +377,42 @@ export class SceneMain extends Phaser.Scene {
         snappedChunkX = snappedChunkX / this.chunkSize / this.tileSize;
         snappedChunkY = snappedChunkY / this.chunkSize / this.tileSize;
 
-        for (var x = snappedChunkX - 2; x < snappedChunkX + 2; x++) {
-            for (var y = snappedChunkY - 2; y < snappedChunkY + 2; y++) {
+        for (var x = snappedChunkX - 10; x < snappedChunkX + 10; x++) {
+            for (var y = snappedChunkY - 10; y < snappedChunkY + 10; y++) {
                 const result = this.isWithinBounds(x, y);
                 if (result.withinBounds) {
                     var existingChunk = this.getChunk(x, y);
                     if (existingChunk == null) {
-                        let newChunk: Biome2 | HomeMap | Biome1;
-                        if (result.biomeType === 'grass') {
-                            newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
-                        } else if (result.biomeType === 'home') {
-                            newChunk = new HomeMap(this, x, y, this.chunkSize, this.tileSize);
-
-                        } else {
-                            newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
+                        let newChunk: Biome2 | HomeMap | Biome1 | Biome2Border | HomeMapBorder | Biome1Border;
+                        switch (result.biomeType) {
+                            case 'grass':
+                                newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
+                                //console.log('grass');
+                                break;
+                            case 'home':
+                                newChunk = new HomeMap(this, x, y, this.chunkSize, this.tileSize);
+                                //console.log('home');
+                                break;
+                            case 'sand':
+                                newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
+                                //console.log('sand');
+                                break;
+                            case 'grassBorder':
+                                newChunk = new Biome2Border(this, x, y, this.chunkSize, this.tileSize);
+                                //console.log('grassBorder');
+                                break;
+                            case 'homeBorder':
+                                newChunk = new HomeMapBorder(this, x, y, this.chunkSize, this.tileSize);
+                                //console.log('homeBorder');
+                                break;
+                            case 'sandBorder':
+                                newChunk = new Biome1Border(this, x, y, this.chunkSize, this.tileSize);
+                                //console.log('sandBorder');
+                                break;
+                            default:
+                                throw new Error(`Unknown biome type: ${result.biomeType}`);
                         }
+
                         this.chunks.push(newChunk);
                     }
                 }
@@ -387,7 +428,7 @@ export class SceneMain extends Phaser.Scene {
                 snappedChunkY,
                 chunk.x,
                 chunk.y
-            ) < 3) {
+            ) < 11) {
                 if (chunk !== null) {
                     chunk.load();
                 }
@@ -423,12 +464,8 @@ export class SceneMain extends Phaser.Scene {
             } else {
                 this.player.body.setVelocityX(0);
                 this.player.body.setVelocityY(0);
-            }
-            if (!this.keyW.isDown && !this.keyS.isDown && !this.keyA.isDown && !this.keyD.isDown) {
-                this.player.body.setVelocityX(0);
-                this.player.body.setVelocityY(0);
                 this.player.play('idle', true);
-            }
+            } 
         }
 
         console.log(this.player.x, this.player.y);
