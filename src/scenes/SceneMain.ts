@@ -43,6 +43,7 @@ export class SceneMain extends Phaser.Scene {
         lootBoxesCoordinates: { x: number, y: number }[]
         gradientAreaCoordinates: { x: number, y: number }[]
     }[];
+    lootBoxes:{ x: number; y: number }[] = [];
     chunks: any[]; // Add this line to declare the chunks property
     followPoint: Phaser.Math.Vector2; // Declare followPoint property
     player: Phaser.GameObjects.Sprite; // Declare player property
@@ -237,6 +238,7 @@ export class SceneMain extends Phaser.Scene {
                 }
 
                 if (isFarEnough) {
+                    this.lootBoxes.push(lootBox);
                     validLootBoxes.push(lootBox);
 
                     // Add loot box sprite to the scene

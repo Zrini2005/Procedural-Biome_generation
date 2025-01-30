@@ -84,7 +84,7 @@ class Biome1 {
             // Step 2: Place trees on grass tiles
             grassTiles.forEach(grassTile => {
                 var treeNoise = this.perlin.perlin2(grassTile.x / 50, grassTile.y / 50); // Use finer noise for tree placement
-                if (treeNoise > 0.2) {
+                if (treeNoise > 0.2 && !this.isNearDungeon(grassTile.x, grassTile.y) && !this.isNearLootBox(grassTile.x, grassTile.y)) {
                     var treeType;
                     if (treeNoise <= 0.3) {
                         treeType = "tree1";
@@ -113,7 +113,7 @@ class Biome1 {
 
             waterTiles.forEach(waterTile => {
                 var assetNoise = this.perlin.perlin2(waterTile.x / 75, waterTile.y / 75); // Use finer noise for asset placement
-                if (assetNoise > 0.2) {
+                if (assetNoise > 0.2 && !this.isNearDungeon(waterTile.x, waterTile.y) && !this.isNearLootBox(waterTile.x, waterTile.y)) {
                     var assetType;
                     if (assetNoise <= 0.5) {
                         assetType = "bush";
@@ -187,7 +187,7 @@ class Biome1 {
         };
 
         // Check for overlaps
-        if (this.isOverlapping(assetBounds)) {
+        if (this.isOverlapping(assetBounds)|| this.isNearDungeon(worldX, worldY) || this.isNearLootBox(worldX, worldY)) {
             return; // Skip placement if overlapping
         }
 
@@ -202,6 +202,27 @@ class Biome1 {
 
         // Add asset bounds to occupied areas
         this.occupiedAreas.push(assetBounds);
+    }
+    isNearDungeon(x: number, y: number): boolean {
+        const dungeonRadius = 100; // Adjust this value as needed
+        for (let polygon of this.scene.vertices) {
+            const center = this.scene.calculateAverageCenter(polygon.reducedVertices);
+            const distance = Phaser.Math.Distance.Between(x, y, center.x, center.y);
+            if (distance < dungeonRadius) {
+                return true;
+            }
+        }
+        return false;
+    }
+    isNearLootBox(x: number, y: number): boolean {
+        const lootBoxRadius = 100; // Adjust this value as needed
+        for (let lootBox of this.scene.lootBoxes) {
+            const distance = Phaser.Math.Distance.Between(x, y, lootBox.x, lootBox.y);
+            if (distance < lootBoxRadius) {
+                return true;
+            }
+        }
+        return false;
     }
 
     isOverlapping(bounds: { x: number; y: number; width: number; height: number }) {
