@@ -2,7 +2,6 @@ import { Scene } from 'phaser';
 import {
   points,
   delaunay,
-  map,
   voronoi,
   calculatePolygonData,
   polygonData,

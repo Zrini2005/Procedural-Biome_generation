@@ -31,9 +31,38 @@ let polygonData: {
   index: number,
   polygonIndex: number,
   vertices: polygonVertices[],
-  reducedVertices: polygonVertices[]
-  lootBoxesCoordinates: polygonVertices[]
+  reducedVertices: polygonVertices[],
+  lootBoxesCoordinates: polygonVertices[],
+  centroid: polygonVertices
 }[] = [];
+
+function calculatePolygonData(polygons: typeof voronoiPolygons) {
+  let i = 0;
+  const polygonArray = Array.from(polygons)
+  for (let i in indices) {
+    const index = indices[i];
+    let vertices =[];
+    for ( let j = 0; j < polygonArray[index].length; j++ ) {
+      vertices.push({x: Number(polygonArray[index][j][0]), y: Number(polygonArray[index][j][1])});
+    }
+    const centroid = calculateCentroid(vertices);
+    polygonData.push({index: Number(i), polygonIndex: 0, vertices: vertices, reducedVertices: [], lootBoxesCoordinates: [], centroid: centroid});
+  }
+  addPolygonIndices(polygonData)
+  calculateReducedVertices(polygonData)
+  lootboxCoordinates(polygonData)
+}
+
+function calculateCentroid(vertices: polygonVertices[]) {
+  let centroid = { x: 0, y: 0 };
+  for (let i = 0; i < vertices.length; i++) {
+    centroid.x += Number(vertices[i].x);
+    centroid.y += Number(vertices[i].y);
+  }
+  centroid.x /= vertices.length;
+  centroid.y /= vertices.length;
+  return centroid;
+}
 
 function addPolygonIndices(polygons: typeof polygonData) {
   for (let i = 0; i < polygons.length; i++) {
@@ -63,30 +92,6 @@ function calculateReducedVertices(polygons: typeof polygonData) {
   }
 }
 
-function calculatePolygonData(polygons: typeof voronoiPolygons) {
-  let i = 0;
-  const polygonArray = Array.from(polygons)
-  for (let i in indices) {
-    const index = indices[i];
-    let vertices =[];
-    for ( let j = 0; j < polygonArray[index].length; j++ ) {
-      vertices.push({x: Number(polygonArray[index][j][0]), y: Number(polygonArray[index][j][1])});
-    }
-    polygonData.push({index: Number(i), polygonIndex: 0, vertices: vertices, reducedVertices: [], lootBoxesCoordinates: []});
-  }
-  for (let polygon in polygons) {
-    let vertices = [];
-    for (let i = 0; i < polygon.length; i++) {
-      vertices.push({ x: Number(polygon[i][0]), y: Number(polygon[i][1]) });
-    }
-    polygonData.push({ index: i, polygonIndex: 0, vertices: vertices, reducedVertices: [], lootBoxesCoordinates: [] });
-    i++;
-  }
-  addPolygonIndices(polygonData)
-  calculateReducedVertices(polygonData)
-  lootboxCoordinates(polygonData)
-}
-
 function lootboxCoordinates(polygons: typeof polygonData) {
   for (let i = 0; i < polygons.length; i++) {
     let centroid = { x: 0, y: 0 };
@@ -108,31 +113,4 @@ function lootboxCoordinates(polygons: typeof polygonData) {
   }
 }
 
-
-function calculateCentroids(vertexPoints: typeof points, delaunayData: typeof delaunay) {
-  const numTriangles = delaunayData.triangles.length / 3;
-  let centroids = [];
-  for (let t = 0; t < numTriangles; t++) {
-    let sumOfX = 0, sumOfY = 0;
-    for (let i = 0; i < 3; i++) {
-      let s = 3 * t + i;
-      let p = vertexPoints[delaunayData.triangles[s]];
-      sumOfX += p.x;
-      sumOfY += p.y;
-    }
-    centroids[t] = { x: sumOfX / 3, y: sumOfY / 3 };
-  }
-  return centroids;
-}
-
-let map = {
-  points: points,
-  numRegions: points.length,
-  numTriangles: delaunay.halfedges.length / 3,
-  numEdges: delaunay.halfedges.length,
-  halfedges: delaunay.halfedges,
-  triangles: delaunay.triangles,
-  centers: calculateCentroids(points, delaunay)
-};
-
-export { map, points, delaunay, voronoi, calculatePolygonData, polygonData };
+export { points, delaunay, voronoi, calculatePolygonData, polygonData };
