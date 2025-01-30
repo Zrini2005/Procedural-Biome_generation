@@ -209,7 +209,7 @@ class Biome1 {
     isNearDungeon(x: number, y: number): boolean {
         const dungeonRadius = 100; // Adjust this value as needed
         for (let polygon of this.scene.vertices) {
-            const center = this.scene.calculateAverageCenter(polygon.reducedVertices);
+            const center = polygon.centroid;
             const distance = Phaser.Math.Distance.Between(x, y, center.x, center.y);
             if (distance < dungeonRadius) {
                 return true;

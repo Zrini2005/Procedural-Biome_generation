@@ -55,11 +55,12 @@ class HomeMap {
                     //   waterTiles.push({ x: tileX, y: tileY });
                     // }
                     if (perlinValue < 0.1) {
-                        key = "icedLake";
+                        key = "sprGrass";
                     } else if (perlinValue >= 0.1 && perlinValue < 0.2) {
-                        key = "icedLake";
+                        key = "sprGrass";
+
                     } else if (perlinValue >= 0.2) {
-                        key = "icedLake";
+                        key = "sprGrass";
                     }
 
                     // Add the main tile sprite

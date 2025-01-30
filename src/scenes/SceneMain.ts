@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Biome2 } from './biome2'; // Add this line to import Biome2
 import { HomeMap } from './homeMap'; // Add this line to import HomeMap 
 import { Biome1 } from './Entities'; // Add this line to import Biome1
-import { calculatePolygonData, polygonData, voronoi } from '../helpers/polygons';
+import { calculatePolygonData, polygonData, voronoi, delaunay } from '../helpers/polygons';
 import sprSand from '../content/sprSand.png';
 import adventurer from '../content/adventurer.webp';
 import grassSpr from '../content/grassSpr.png'
@@ -27,8 +27,8 @@ import bushSpr from '../content/bushSpr.png';
 import { Biome2Border } from './biome2Border';
 import { HomeMapBorder } from './homeMapBorder';
 import { Biome1Border } from './biome1Border';
-
-
+import tileset from '../content/tileset/tileset.png'
+import teleporter from '../content/tileset/teleporter.json'
 
 export class SceneMain extends Phaser.Scene {
     resolution: number = 3000;
@@ -45,6 +45,7 @@ export class SceneMain extends Phaser.Scene {
         reducedVertices: { x: number, y: number }[]
         lootBoxesCoordinates: { x: number, y: number }[]
         gradientAreaCoordinates: { x: number, y: number }[]
+        centroid: { x: number, y: number }
     }[];
     lootBoxes:{ x: number; y: number }[] = [];
     chunks: any[]; // Add this line to declare the chunks property
@@ -89,8 +90,8 @@ export class SceneMain extends Phaser.Scene {
         this.load.image("grassbase", grassbase);
         this.indices = randomWalkGen()
 
-
-
+        this.load.image("tileset", tileset);
+        this.load.tilemapTiledJSON("teleporter", teleporter);
     }
 
     create() {
@@ -139,7 +140,6 @@ export class SceneMain extends Phaser.Scene {
             repeat: -1
         });
 
-
         this.mapSize = 1000;
         this.chunkSize = 4;
         this.tileSize = 16;
@@ -153,13 +153,17 @@ export class SceneMain extends Phaser.Scene {
             vertex.reducedVertices = vertex.reducedVertices.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
             vertex.lootBoxesCoordinates = vertex.lootBoxesCoordinates.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
             vertex.gradientAreaCoordinates = vertex.gradientAreaCoordinates.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
+            vertex.centroid = { x: vertex.centroid.x * this.resolution, y: vertex.centroid.y * this.resolution };
         });
         console.log(polygonData);
 
+        // Start the player and cam at center of home base
+        const startX = this.vertices[0].centroid.x;
+        const startY = this.vertices[0].centroid.y;
 
         this.cameras.main.setZoom(1);
         this.followPoint = new Phaser.Math.Vector2(
-            10583.679779291666, 10854.282121798213
+            startX, startY
         );
 
         this.chunks = [];
@@ -170,20 +174,10 @@ export class SceneMain extends Phaser.Scene {
             this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
             this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         }
-        const middleChunkX = Math.floor(this.mapSize / 2);
-        const middleChunkY = Math.floor(this.mapSize / 2);
 
-
-        // Add collision between player and collidable objects
-
-
-        this.player = this.add.sprite(10583.679779291666, 10854.282121798213, 'adventurer');
+        this.player = this.add.sprite(startX, startY, 'adventurer');
         //this.player.setPosition(1, 1);
         this.physics.world.enable(this.player);
-
-
-
-
 
         this.player.setDepth(10);
         this.player.setScale(0.3);
@@ -192,9 +186,8 @@ export class SceneMain extends Phaser.Scene {
             (this.player.body as Phaser.Physics.Arcade.Body).setOffset(this.player.width * 0.35, this.player.height * 0.35);
         }
 
-        this.player.x = 10583.679779291666;
-        this.player.y = 10854.282121798213;
-
+        this.player.x = startX;
+        this.player.y = startY;
 
         this.collidableObjects = this.physics.add.group();
         const tree = this.physics.add.sprite(11000, 11000, 'tree1');
@@ -209,20 +202,27 @@ export class SceneMain extends Phaser.Scene {
         // Add collider with debug log
         this.physics.add.collider(this.player, this.collidableObjects);
 
-
-
-
         // Debugging: Log collidable objects
         console.log('Collidable Objects:', this.collidableObjects.getChildren());
 
         this.placeDungeonAtPolygonCenters();
         this.addLootBoxes();
 
+        const map = this.make.tilemap({ key: "teleporter" });
+        const tileset = map.addTilesetImage("CENTRAL_TILESET", "tileset");
+        const layer = map.createLayer("Tile Layer 1", tileset!, startX, startY);
+        layer?.setDepth(9.5);
+        console.log("tilesets", map.tilesets); // Check available tilesets
+        console.log("object layers", map.getObjectLayerNames()); // Check layer names
+
+
     }
+
     addToCollidableObjects(object: Phaser.GameObjects.GameObject) {
 
         this.collidableObjects.add(object); // Add the object to the collidable group
     }
+
     addLootBoxes() {
         const minDistance = 1000; // Minimum allowed distance between loot boxes
 
@@ -256,10 +256,10 @@ export class SceneMain extends Phaser.Scene {
         }
     }
 
-
     placeDungeonAtPolygonCenters() {
         for (let polygon of this.vertices) {
-            const center = this.calculateAverageCenter(polygon.reducedVertices);
+            const center = polygon.centroid;
+            console.log("centre:", center);
 
             // Check if a dungeon already exists for this polygon
             const existingDungeon = this.children.getByName(`dungeon-${polygon.polygonIndex}`);
@@ -273,23 +273,6 @@ export class SceneMain extends Phaser.Scene {
             }
         }
     }
-
-    calculateAverageCenter(vertices: { x: number; y: number }[]): { x: number; y: number } {
-        let xSum = 0;
-        let ySum = 0;
-
-        for (const vertex of vertices) {
-            xSum += vertex.x;
-            ySum += vertex.y;
-        }
-
-        const vertexCount = vertices.length;
-        return {
-            x: xSum / vertexCount,
-            y: ySum / vertexCount,
-        };
-    }
-
 
     isWithinBounds(chunkX: number, chunkY: number): { withinBounds: boolean; biomeType?: string } {
         const chunkCenterX = chunkX * this.chunkSize * this.tileSize;
@@ -471,11 +454,8 @@ export class SceneMain extends Phaser.Scene {
         }
 
         // console.log(this.player.x, this.player.y);
-
-
+        console.log(delaunay.find(this.player.x / this.resolution, this.player.y / this.resolution));
 
         this.cameras.main.centerOn(this.player.x, this.player.y);
     }
-
-
 }
