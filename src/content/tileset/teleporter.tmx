@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.1" orientation="orthogonal" renderorder="right-down" width="12" height="9" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="1">
+ <tileset firstgid="1" name="CENTRAL_TILESET" tilewidth="16" tileheight="16" tilecount="1225" columns="35">
+  <image source="../../../../Downloads/centralMapFinal/tileset.png" width="560" height="560"/>
+  <tile id="120">
+   <properties>
+    <property name="collides" type="bool" value="true"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer id="1" name="Tile Layer 1" width="12" height="9">
+  <data encoding="csv">
+46,58,46,46,46,46,46,46,46,46,977,46,
+46,1008,1004,1005,1006,1006,1006,1006,1006,1007,1008,46,
+1040,1041,54,1042,1043,1044,1045,1046,1047,1048,1041,46,
+46,44,1080,1081,1082,1083,1084,1085,1086,1087,1088,46,
+1115,44,54,1117,1118,1119,1120,1121,1122,1087,1123,46,
+46,1008,54,1144,1145,1146,1147,1148,1149,1087,1150,46,
+46,1041,235,159,159,159,159,1172,1173,1174,1041,46,
+46,58,179,180,180,180,180,180,180,1181,1182,46,
+46,46,46,46,46,46,46,46,46,46,46,46
+</data>
+ </layer>
+</map>

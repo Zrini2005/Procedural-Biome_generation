@@ -1,0 +1,59 @@
+{ "compressionlevel":-1,
+ "height":9,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[46, 58, 46, 46, 46, 46, 46, 46, 46, 46, 977, 46,
+            46, 1008, 1004, 1005, 1006, 1006, 1006, 1006, 1006, 1007, 1008, 46,
+            1040, 1041, 54, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1041, 46,
+            46, 44, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 46,
+            1115, 44, 54, 1117, 1118, 1119, 1120, 1121, 1122, 1087, 1123, 46,
+            46, 1008, 54, 1144, 1145, 1146, 1147, 1148, 1149, 1087, 1150, 46,
+            46, 1041, 235, 159, 159, 159, 159, 1172, 1173, 1174, 1041, 46,
+            46, 58, 179, 180, 180, 180, 180, 180, 180, 1181, 1182, 46,
+            46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46, 46],
+         "height":9,
+         "id":1,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":12,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":2,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.11.1",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "columns":35,
+         "firstgid":1,
+         "image":"tileset.png",
+         "imageheight":560,
+         "imagewidth":560,
+         "margin":0,
+         "name":"CENTRAL_TILESET",
+         "spacing":0,
+         "tilecount":1225,
+         "tileheight":16,
+         "tiles":[
+                {
+                 "id":120,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }],
+         "tilewidth":16
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":"1.10",
+ "width":12
+}
