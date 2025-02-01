@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
-import { Tile } from './Entities';
-import { createNoise2D } from 'simplex-noise';
-const noise2D = createNoise2D(() =>10);
+import { Tile } from './Entities'; 
+import { SceneMain } from '../scenes/SceneMain'; 
+import Perlin from '../helpers/perlin';
  
 class Biome4 {
-    scene: Phaser.Scene;
+    scene: SceneMain;
     x: number;
     y: number;
     tiles: Phaser.GameObjects.Group;
@@ -12,9 +12,11 @@ class Biome4 {
     occupiedAreas: { x: number; y: number; width: number; height: number }[];
     chunkSize: number;
     tileSize: number;
+    perlin: Perlin;
+    polygonIdx: number;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, chunkSize: number, tileSize: number) {
-        this.scene = scene;
+    constructor(scene: Phaser.Scene, x: number, y: number, chunkSize: number, tileSize: number, polygonIdx: number) {
+        this.scene = scene as SceneMain;
         this.x = x;
         this.y = y;
         this.chunkSize = chunkSize;
@@ -22,6 +24,8 @@ class Biome4 {
         this.tiles = this.scene.add.group();
         this.isLoaded = false;
         this.occupiedAreas = [];
+        this.perlin = new Perlin();
+        this.polygonIdx = polygonIdx;
     }
 
     unload() {
@@ -43,8 +47,11 @@ class Biome4 {
                 for (var y = 0; y < this.chunkSize; y++) {
                     var tileX = (this.x * (this.chunkSize * this.tileSize)) + (x * this.tileSize);
                     var tileY = (this.y * (this.chunkSize * this.tileSize)) + (y * this.tileSize);
+                    if (!this.isWithinBounds(tileX, tileY)) {
+                        continue; // Skip tiles that are not within bounds
+                    }
 
-                    var perlinValue = noise2D(tileX / 150, tileY / 150);
+                    var perlinValue = this.perlin.perlin2(tileX / 500, tileY / 500);
 
                     var key = "";
                     var animationKey = "";
@@ -78,7 +85,7 @@ class Biome4 {
 
             // Step 2: Place trees on grass tiles
             grassTiles.forEach(grassTile => {
-                var treeNoise = noise2D(grassTile.x / 50, grassTile.y / 50); // Use finer noise for tree placement
+                var treeNoise = this.perlin.perlin2(grassTile.x / 50, grassTile.y / 50); // Use finer noise for tree placement
                 if (treeNoise > 0.2) {
                     var treeType;
                     if (treeNoise <= 0.3) {
@@ -105,7 +112,7 @@ class Biome4 {
             });
 
             waterTiles.forEach(waterTile => {
-                var assetNoise = noise2D(waterTile.x / 75, waterTile.y / 75); // Use finer noise for asset placement
+                var assetNoise = this.perlin.perlin2(waterTile.x / 75, waterTile.y / 75); // Use finer noise for asset placement
                 if (assetNoise > 0.2) {
                     var assetType;
                     if (assetNoise <= 0.5) {
@@ -147,6 +154,45 @@ class Biome4 {
 
             this.isLoaded = true;
         }
+    }
+    isWithinBounds(x: number, y: number): boolean {
+        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].reducedVertices)) {
+            console.log("inside");
+            return true;
+        }
+
+        console.log("outside");
+        return false;
+    }
+
+    point_in_polygon(point: { x: number; y: number }, polygon: { x: number; y: number }[]): boolean {
+
+        const num_vertices = polygon.length;
+        var x = point.x;
+        var y = point.y;
+        let inside = false;
+
+        let p1 = polygon[0];
+        let p2;
+
+        for (let i = 1; i <= num_vertices; i++) {
+            p2 = polygon[i % num_vertices];
+
+            if (y > Math.min(p1.y, p2.y)) {
+                if (y <= Math.max(p1.y, p2.y)) {
+                    if (x <= Math.max(p1.x, p2.x)) {
+                        const x_intersection = ((y - p1.y) * (p2.x - p1.x)) / (p2.y - p1.y) + p1.x;
+
+                        if (p1.x === p2.x || x <= x_intersection) {
+                            inside = !inside;
+                        }
+                    }
+                }
+            }
+
+            p1 = p2;
+        }
+        return inside;
     }
     placeAssetOnSand(worldX: number, worldY: number) {
         const hashValue = this.hash(worldX, worldY);

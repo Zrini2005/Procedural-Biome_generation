@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { Tile } from './Entities'; 
+import { SceneMain } from '../scenes/SceneMain';
  
 class Biome1Border {
-    scene: Phaser.Scene;
+    scene: SceneMain;
     x: number;
     y: number;
     tiles: Phaser.GameObjects.Group;
@@ -10,9 +11,10 @@ class Biome1Border {
     occupiedAreas: { x: number; y: number; width: number; height: number }[];
     chunkSize: number;
     tileSize: number;
+    polygonIdx: number;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, chunkSize: number, tileSize: number) {
-        this.scene = scene;
+    constructor(scene: Phaser.Scene, x: number, y: number, chunkSize: number, tileSize: number, polygonIdx: number) {
+        this.scene = scene as SceneMain;
         this.x = x;
         this.y = y;
         this.chunkSize = chunkSize;
@@ -20,6 +22,7 @@ class Biome1Border {
         this.tiles = this.scene.add.group();
         this.isLoaded = false;
         this.occupiedAreas = [];
+        this.polygonIdx = polygonIdx;
     }
 
     unload() {
@@ -38,6 +41,9 @@ class Biome1Border {
                 for (var y = 0; y < this.chunkSize; y++) {
                     var tileX = (this.x * (this.chunkSize * this.tileSize)) + (x * this.tileSize);
                     var tileY = (this.y * (this.chunkSize * this.tileSize)) + (y * this.tileSize); 
+                    if (!this.isWithinBounds(tileX, tileY)) {
+                        continue; // Skip tiles that are not within bounds
+                    }
                     const key = "bush";  
                     var tile = new Tile(this.scene, tileX, tileY, key); 
                     this.tiles.add(tile);
@@ -46,5 +52,44 @@ class Biome1Border {
             this.isLoaded = true;
         }
     } 
+    isWithinBounds(x: number, y: number): boolean { 
+            if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].gradientAreaCoordinates) && !this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].reducedVertices)) {
+                console.log("inside");
+                return true;
+            }
+        
+        console.log("outside");
+        return false;
+    }
+
+    point_in_polygon(point: { x: number; y: number }, polygon: { x: number; y: number }[]): boolean {
+
+        const num_vertices = polygon.length;
+        var x = point.x;
+        var y = point.y;
+        let inside = false;
+
+        let p1 = polygon[0];
+        let p2;
+
+        for (let i = 1; i <= num_vertices; i++) {
+            p2 = polygon[i % num_vertices];
+
+            if (y > Math.min(p1.y, p2.y)) {
+                if (y <= Math.max(p1.y, p2.y)) {
+                    if (x <= Math.max(p1.x, p2.x)) {
+                        const x_intersection = ((y - p1.y) * (p2.x - p1.x)) / (p2.y - p1.y) + p1.x;
+
+                        if (p1.x === p2.x || x <= x_intersection) {
+                            inside = !inside;
+                        }
+                    }
+                }
+            }
+
+            p1 = p2;
+        }
+        return inside;
+    }
 }
 export { Biome1Border };

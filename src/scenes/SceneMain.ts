@@ -162,7 +162,7 @@ export class SceneMain extends Phaser.Scene {
 
 
         this.mapSize = 1000;
-        this.chunkSize = 4;
+        this.chunkSize = 16;
         this.tileSize = 16;
         this.cameraSpeed = 1000;
         const polygons = voronoi.cellPolygons();
@@ -295,7 +295,7 @@ export class SceneMain extends Phaser.Scene {
         }
     }
 
-    isWithinBounds(chunkX: number, chunkY: number): { withinBounds: boolean; biomeType?: string } {
+    isWithinBounds(chunkX: number, chunkY: number): { withinBounds: boolean; biomeType?: string ;index?:number} {
         const chunkCenterX = chunkX * this.chunkSize * this.tileSize;
         const chunkCenterY = chunkY * this.chunkSize * this.tileSize;
 
@@ -315,7 +315,7 @@ export class SceneMain extends Phaser.Scene {
                 else{
                     type = "psychic";
                 }
-                return { withinBounds: true, biomeType: type };
+                return { withinBounds: true, biomeType: type, index:polygon.index };
             }
             else if(this.point_in_polygon({ x: chunkCenterX, y: chunkCenterY }, polygon.gradientAreaCoordinates)){
                 var type;
@@ -332,7 +332,7 @@ export class SceneMain extends Phaser.Scene {
                 else{
                     type = "psychicBorder";
                 }
-                return { withinBounds: true, biomeType: type };
+                return { withinBounds: true, biomeType: type , index:polygon.index};
             }
         }
 
@@ -387,8 +387,8 @@ export class SceneMain extends Phaser.Scene {
         snappedChunkX = snappedChunkX / this.chunkSize / this.tileSize;
         snappedChunkY = snappedChunkY / this.chunkSize / this.tileSize;
 
-        for (var x = snappedChunkX - 10; x < snappedChunkX + 10; x++) {
-            for (var y = snappedChunkY - 10; y < snappedChunkY + 10; y++) {
+        for (var x = snappedChunkX - 2; x < snappedChunkX + 2; x++) {
+            for (var y = snappedChunkY - 2; y < snappedChunkY + 2; y++) {
                 const result = this.isWithinBounds(x, y);
                 if (result.withinBounds) {
                     var existingChunk = this.getChunk(x, y);
@@ -396,23 +396,43 @@ export class SceneMain extends Phaser.Scene {
                         let newChunk: Biome2 | Biome3 | Biome1 | Biome2Border | Biome3Border | Biome1Border | Biome4 | Biome4Border;
                         switch (result.biomeType) {
                             case 'steel':
-                                newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
+                                if (typeof result.index === 'number') {
+                                    newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize, result.index);
+                                } else {
+                                    throw new Error('Expected result.index to be a number');
+                                }
                                 //console.log('grass');
                                 break;
                             case 'ground':
-                                newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
+                                if (typeof result.index === 'number') {
+                                    newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize, result.index);
+                                } else {
+                                    throw new Error('Expected result.index to be a number');
+                                }
                                 //console.log('home');
                                 break;
                             case 'flying':
-                                newChunk = new Biome3(this, x, y, this.chunkSize, this.tileSize);
+                                if (typeof result.index === 'number') {
+                                    newChunk = new Biome3(this, x, y, this.chunkSize, this.tileSize, result.index);
+                                } else {
+                                    throw new Error('Expected result.index to be a number');
+                                }
                                 //console.log('sand');
                                 break;
                             case 'psychic':
-                                newChunk = new Biome4(this, x, y, this.chunkSize, this.tileSize);
+                                if (typeof result.index === 'number') {
+                                    newChunk = new Biome4(this, x, y, this.chunkSize, this.tileSize, result.index);
+                                } else {
+                                    throw new Error('Expected result.index to be a number');
+                                }
                                 //console.log('grassBorder');
                                 break;
                             case 'steelBorder':
-                                newChunk = new Biome1Border(this, x, y, this.chunkSize, this.tileSize);
+                                if (typeof result.index === 'number') {
+                                    newChunk = new Biome1Border(this, x, y, this.chunkSize, this.tileSize, result.index);
+                                } else {
+                                    throw new Error('Expected result.index to be a number');
+                                }
                                 //console.log('homeBorder');
                                 break;
                             case 'flyingBorder':
