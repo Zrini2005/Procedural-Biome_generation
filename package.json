@@ -30,6 +30,7 @@
         "d3-delaunay": "^6.0.4",
         "fast-simplex-noise": "^4.0.0",
         "phaser": "^3.87.0",
+        "prando": "^6.0.1",
         "simplex-noise": "^4.0.3"
     }
 }

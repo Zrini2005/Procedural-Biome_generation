@@ -29,8 +29,6 @@ import steel2png3 from '../content/steel2png3.png';
 import steel4img1 from '../content/steel4img1.png';
 import steel4img2 from '../content/steel4img2.png';
 import steel4img3 from '../content/steel4img3.png';
-
-import { steel4img } from '../content/steel4img.png';
 import { Biome3 } from './biome3';
 import { Biome4 } from './biome4';
 import steelTilemid from '../content/steelTilemid.png';
@@ -77,7 +75,7 @@ export class SceneMain extends Phaser.Scene {
             frameHeight: 16
         });
         this.load.image("sprSand", sprSand);
-        this.load.image("sprGrass", sprGrass);
+        // this.load.image("sprGrass", sprGrass);
         this.load.image("sprGrass", grassSpr);
         this.load.image("tree1", tree1);
         this.load.image("tree2", tree2);
@@ -178,7 +176,7 @@ export class SceneMain extends Phaser.Scene {
         const startX = this.vertices[0].centroid.x;
         const startY = this.vertices[0].centroid.y;
 
-        this.cameras.main.setZoom(1);
+        this.cameras.main.setZoom(2);
         this.followPoint = new Phaser.Math.Vector2(
             startX, startY
         );
@@ -192,6 +190,7 @@ export class SceneMain extends Phaser.Scene {
             this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         }
 
+        this.physics.world.defaults.debugShowBody = false;
         this.player = this.add.sprite(startX, startY, 'adventurer');
         //this.player.setPosition(1, 1);
         this.physics.world.enable(this.player);
@@ -280,7 +279,7 @@ export class SceneMain extends Phaser.Scene {
 
             // Check if a dungeon already exists for this polygon
             const existingDungeon = this.children.getByName(`dungeon-${polygon.polygonIndex}`);
-            if (!existingDungeon) {
+            if (!existingDungeon && polygon.polygonIndex != 24) {
                 const dungeon = this.add.sprite(center.x, center.y, "dungeon");
                 dungeon.setOrigin(0.5, 0.5);
                 dungeon.setScale(0.5);
@@ -380,7 +379,7 @@ export class SceneMain extends Phaser.Scene {
                 if (result.withinBounds) {
                     var existingChunk = this.getChunk(x, y);
                     if (existingChunk == null) {
-                        let newChunk: Biome2 | Biome3 | Biome1 | Biome2Border | Biome3Border | Biome1Border | Biome4 | Biome4Border;
+                        let newChunk: Biome2 | Biome3 | Biome1 | Biome4;
                         switch (result.biomeType) {
                             case 'steel':
                                 if (typeof result.index === 'number') {

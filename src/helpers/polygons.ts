@@ -1,16 +1,19 @@
 import { Delaunay } from 'd3-delaunay';
 import { randomWalkGen } from './domains';
+import Prando from 'prando';
 
 const GRIDSIZE = 7;
 const JITTER = 0.5;
 let points: { x: number, y: number }[] = [];
 
+let rng =new Prando(100);
+
 //Creating grid points
 for (let x = 1; x <= GRIDSIZE; x++) {
   for (let y = 1; y <= GRIDSIZE; y++) {
     points.push({
-      x: x + JITTER * (Math.random() - Math.random()),
-      y: y + JITTER * (Math.random() - Math.random())
+      x: x + JITTER * (rng.next()-rng.next()),
+      y: y + JITTER * (rng.next()-rng.next())
     });
   }
 }
