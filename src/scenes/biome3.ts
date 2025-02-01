@@ -55,12 +55,12 @@ class Biome3 {
                     //   waterTiles.push({ x: tileX, y: tileY });
                     // }
                     if (perlinValue < 0.1) {
-                        key = "sprNewTry";
+                        key = "icedLake";
                     } else if (perlinValue >= 0.1 && perlinValue < 0.2) {
-                        key = "sprNewTry";
+                        key = "icedLake";
 
                     } else if (perlinValue >= 0.2) {
-                        key = "sprNewTry";
+                        key = "icedLake";
                     }
 
                     // Add the main tile sprite

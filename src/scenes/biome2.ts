@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { Tile } from './Entities';
-import { createNoise2D } from 'simplex-noise';
-const noise2D = createNoise2D(() =>10);
+
+import Perlin from '../helpers/perlin';
+import { Tile } from './Entities';  
  
 class Biome2 {
     scene: Phaser.Scene;
@@ -12,6 +12,7 @@ class Biome2 {
     occupiedAreas: { x: number; y: number; width: number; height: number }[];
     chunkSize: number;
     tileSize: number;
+    perlin: Perlin;
 
     constructor(scene: Phaser.Scene, x: number, y: number, chunkSize: number, tileSize: number) {
         this.scene = scene;
@@ -22,6 +23,7 @@ class Biome2 {
         this.tiles = this.scene.add.group();
         this.isLoaded = false;
         this.occupiedAreas = [];
+        this.perlin = new Perlin();
     }
 
     unload() {
@@ -44,7 +46,7 @@ class Biome2 {
                     var tileX = (this.x * (this.chunkSize * this.tileSize)) + (x * this.tileSize);
                     var tileY = (this.y * (this.chunkSize * this.tileSize)) + (y * this.tileSize);
 
-                    var perlinValue = noise2D(tileX / 150, tileY / 150);
+                    var perlinValue = this.perlin.perlin2(tileX / 500, tileY / 500);
 
                     var key = "";
                     var animationKey = "";
@@ -55,12 +57,14 @@ class Biome2 {
                     //   waterTiles.push({ x: tileX, y: tileY });
                     // }
                     if (perlinValue < 0.1) {
-                        key = "sprNewTry";
+                        key = "steelTilebase";
+                        waterTiles.push({ x: tileX, y: tileY });
                     } else if (perlinValue >= 0.1 && perlinValue < 0.2) {
-                        key = "sprNewTry";
+                        key = "sprHighland";
 
                     } else if (perlinValue >= 0.2) {
-                        key = "sprNewTry";
+                        key = "steelTile";
+                        grassTiles.push({ x: tileX, y: tileY });
                     }
 
                     // Add the main tile sprite
@@ -78,23 +82,24 @@ class Biome2 {
 
             // Step 2: Place trees on grass tiles
             grassTiles.forEach(grassTile => {
-                var treeNoise = noise2D(grassTile.x / 50, grassTile.y / 50); // Use finer noise for tree placement
-                if (treeNoise > 0.2) {
+                var treeNoise = this.perlin.perlin2(grassTile.x / 50, grassTile.y / 50); // Use finer noise for tree placement
+                if (treeNoise > 0.5) {
                     var treeType;
-                    if (treeNoise <= 0.3) {
-                        treeType = "tree1";
+                    if (treeNoise <= 0.6) {
+                        treeType = "steel2png3";
                     } else if (treeNoise <= 0.4) {
-                        treeType = "tree2";
+                        treeType = "steel4img2";
                     } else {
-                        treeType = "tree3";
+                        treeType = "steel4img1";
+                         
                     }
 
                     // Add tree sprite with proper scaling
                     const assetWidth = this.scene.textures.get(treeType).getSourceImage().width;
                     const assetHeight = this.scene.textures.get(treeType).getSourceImage().height;
 
-                    const scaleX = 0.05 + this.tileSize / assetWidth;
-                    const scaleY = 0.05 + this.tileSize / assetHeight;
+                    const scaleX = 0.2 + this.tileSize / assetWidth;
+                    const scaleY = 0.2 + this.tileSize / assetHeight;
                     var tree = new Phaser.GameObjects.Sprite(this.scene, grassTile.x + 8, grassTile.y + 8, treeType); // Centered on the tile
                     tree.setOrigin(0.5, 1); // Align the tree's bottom to the tile
                     tree.setDepth(8); // Sort by Y position
@@ -105,7 +110,7 @@ class Biome2 {
             });
 
             waterTiles.forEach(waterTile => {
-                var assetNoise = noise2D(waterTile.x / 75, waterTile.y / 75); // Use finer noise for asset placement
+                var assetNoise = this.perlin.perlin2(waterTile.x / 75, waterTile.y / 75); // Use finer noise for asset placement
                 if (assetNoise > 0.2) {
                     var assetType;
                     if (assetNoise <= 0.5) {
@@ -156,11 +161,12 @@ class Biome2 {
 
         // Determine which asset to place based on hash value
         if (hashValue > 0.1 && hashValue <= 0.105) {
-            assetType = "asset1";
+            assetType = "steel4img3";
         } else if (hashValue > 0.5 && hashValue <= 0.505) {
-            assetType = "asset2";
+            assetType = "steel4img3";
         } else if (hashValue > 0.995) {
-            assetType = "asset3";
+            assetType = "steel4img3";
+            
         } else {
             return; // No asset to place for this tile
         }

@@ -27,6 +27,19 @@ import bushSpr from '../content/bushSpr.png';
 import { Biome2Border } from './biome2Border';
 import { HomeMapBorder } from './homeMapBorder';
 import { Biome1Border } from './biome1Border';
+import { Biome3Border } from './biome3Border';
+import { Biome4Border } from './biome4Border';
+import steel2png3 from '../content/steel2png3.png';
+import steel4img1 from '../content/steel4img1.png';
+import steel4img2 from '../content/steel4img2.png';
+import steel4img3 from '../content/steel4img3.png';
+
+import {steel4img} from '../content/steel4img.png';
+import { Biome3 } from './biome3';
+import { Biome4 } from './biome4';
+import steelTilemid from '../content/steelTilemid.png';
+import steelTilebase from '../content/steelTilebase.png';
+import steelTile from '../content/steelTile.png';
 import tileset from '../content/tileset/tileset.png'
 import teleporter from '../content/tileset/teleporter.json'
 
@@ -68,7 +81,7 @@ export class SceneMain extends Phaser.Scene {
             frameHeight: 16
         });
         this.load.image("sprSand", sprSand);
-        // this.load.image("sprGrass", sprGrass);
+        this.load.image("sprGrass", sprGrass);
         this.load.image("sprGrass", grassSpr);
         this.load.image("tree1", tree1);
         this.load.image("tree2", tree2);
@@ -82,6 +95,14 @@ export class SceneMain extends Phaser.Scene {
         this.load.image("asset1", asset1);
         this.load.image("asset2", asset2);
         this.load.image("asset3", asset3);
+        this.load.image("steelTile", steelTile);
+        this.load.image("steelTilemid",steelTilemid);
+        this.load.image("steelTilebase",steelTilebase);
+        this.load.image("steel2png3",steel2png3);
+        this.load.image("steel4img1",steel4img1);
+        this.load.image("steel4img2",steel4img2);
+        this.load.image("steel4img3",steel4img3);
+        this.load.image("sprHighland", sprHighland);
         this.load.image("icedLake", icedLake);
         this.load.spritesheet('adventurer', adventurer, {
             frameWidth: 256, // Width of a single frame
@@ -95,7 +116,6 @@ export class SceneMain extends Phaser.Scene {
     }
 
     create() {
-
         // Player animations
         // Define animations
         this.anims.create({
@@ -139,6 +159,7 @@ export class SceneMain extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         });
+
 
         this.mapSize = 1000;
         this.chunkSize = 4;
@@ -282,30 +303,34 @@ export class SceneMain extends Phaser.Scene {
             if (this.point_in_polygon({ x: chunkCenterX, y: chunkCenterY }, polygon.reducedVertices)) {
                 var type;
 
-                if (polygon.polygonIndex === 24) {
-                    type = "home";
+                if (polygon.index>= 0 && polygon.index < 5) {
+                    type = "steel";
                 }
-                else if (polygon.index >= 10) {
-                    type = "sand";
+                else if (polygon.index >= 5 && polygon.index < 10) {
+                    type = "ground";
                 }
-                else {
-                    type = "grass";
-
+                else if(polygon.index >= 10 && polygon.index < 15){
+                    type = "flying"; 
+                }
+                else{
+                    type = "psychic";
                 }
                 return { withinBounds: true, biomeType: type };
             }
             else if(this.point_in_polygon({ x: chunkCenterX, y: chunkCenterY }, polygon.gradientAreaCoordinates)){
                 var type;
 
-                if (polygon.polygonIndex === 24) {
-                    type = "homeBorder";
+                if (polygon.index>= 0 && polygon.index < 5) {
+                    type = "steelBorder";
                 }
-                else if (polygon.index >= 10) {
-                    type = "sandBorder";
+                else if (polygon.index >= 5 && polygon.index < 10) {
+                    type = "groundBorder";
                 }
-                else {
-                    type = "grassBorder";
-
+                else if(polygon.index >= 10 && polygon.index < 15){
+                    type = "flyingBorder"; 
+                }
+                else{
+                    type = "psychicBorder";
                 }
                 return { withinBounds: true, biomeType: type };
             }
@@ -368,32 +393,41 @@ export class SceneMain extends Phaser.Scene {
                 if (result.withinBounds) {
                     var existingChunk = this.getChunk(x, y);
                     if (existingChunk == null) {
-                        let newChunk: Biome2 | HomeMap | Biome1 | Biome2Border | HomeMapBorder | Biome1Border;
+                        let newChunk: Biome2 | Biome3 | Biome1 | Biome2Border | Biome3Border | Biome1Border | Biome4 | Biome4Border;
                         switch (result.biomeType) {
-                            case 'grass':
-                                newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
+                            case 'steel':
+                                newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
                                 //console.log('grass');
                                 break;
-                            case 'home':
-                                newChunk = new HomeMap(this, x, y, this.chunkSize, this.tileSize);
+                            case 'ground':
+                                newChunk = new Biome2(this, x, y, this.chunkSize, this.tileSize);
                                 //console.log('home');
                                 break;
-                            case 'sand':
-                                newChunk = new Biome1(this, x, y, this.chunkSize, this.tileSize);
+                            case 'flying':
+                                newChunk = new Biome3(this, x, y, this.chunkSize, this.tileSize);
                                 //console.log('sand');
                                 break;
-                            case 'grassBorder':
-                                newChunk = new Biome2Border(this, x, y, this.chunkSize, this.tileSize);
+                            case 'psychic':
+                                newChunk = new Biome4(this, x, y, this.chunkSize, this.tileSize);
                                 //console.log('grassBorder');
                                 break;
-                            case 'homeBorder':
-                                newChunk = new HomeMapBorder(this, x, y, this.chunkSize, this.tileSize);
+                            case 'steelBorder':
+                                newChunk = new Biome1Border(this, x, y, this.chunkSize, this.tileSize);
                                 //console.log('homeBorder');
                                 break;
-                            case 'sandBorder':
-                                newChunk = new Biome1Border(this, x, y, this.chunkSize, this.tileSize);
+                            case 'flyingBorder':
+                                newChunk = new Biome3Border(this, x, y, this.chunkSize, this.tileSize);
                                 //console.log('sandBorder');
                                 break;
+                            case 'psychicBorder':
+                                newChunk = new Biome4Border(this, x, y, this.chunkSize, this.tileSize);
+                                //console.log('grassBorder');
+                                break;
+                            case 'groundBorder':
+                                newChunk = new Biome2Border(this, x, y, this.chunkSize, this.tileSize);
+                                //console.log('homeBorder');
+                                break;
+
                             default:
                                 throw new Error(`Unknown biome type: ${result.biomeType}`);
                         }

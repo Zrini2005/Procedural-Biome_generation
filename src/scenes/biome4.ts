@@ -55,12 +55,12 @@ class Biome4 {
                     //   waterTiles.push({ x: tileX, y: tileY });
                     // }
                     if (perlinValue < 0.1) {
-                        key = "sprNewTry";
+                        key = "sprSand";
                     } else if (perlinValue >= 0.1 && perlinValue < 0.2) {
-                        key = "sprNewTry";
+                        key = "sprSand";
 
                     } else if (perlinValue >= 0.2) {
-                        key = "sprNewTry";
+                        key = "sprSand";
                     }
 
                     // Add the main tile sprite

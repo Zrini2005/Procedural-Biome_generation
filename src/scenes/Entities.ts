@@ -11,7 +11,7 @@ class Biome1 {
     occupiedAreas: { x: number; y: number; width: number; height: number }[];
     chunkSize: number;
     tileSize: number;
-    perlin: Perlin;
+    perlin: Perlin; 
 
     constructor(scene: Phaser.Scene, x: number, y: number, chunkSize: number, tileSize: number) {
         this.scene = scene as SceneMain;
@@ -22,7 +22,7 @@ class Biome1 {
         this.tiles = this.scene.add.group();
         this.isLoaded = false;
         this.occupiedAreas = [];
-        this.perlin = new Perlin();
+        this.perlin = new Perlin(); 
 
     }
 
@@ -158,11 +158,11 @@ class Biome1 {
             this.isLoaded = true;
         }
     }
+     
     placeAssetOnSand(worldX: number, worldY: number) {
         const hashValue = this.hash(worldX, worldY);
         const tileSize = this.tileSize;
-        let assetType;
-
+        let assetType; 
         // Determine which asset to place based on hash value
         if (hashValue > 0.1 && hashValue <= 0.105) {
             assetType = "asset1";
