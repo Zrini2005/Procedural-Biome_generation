@@ -23,18 +23,14 @@ import lootbox from '../content/lootbox-closed.webp';
 import sprHighland from '../content/sprHighland.png';
 import { randomWalkGen } from '../helpers/domains';
 import grassbase from '../content/grassbase.png';
-import bushSpr from '../content/bushSpr.png';
-import { Biome2Border } from './biome2Border';
-import { HomeMapBorder } from './homeMapBorder';
-import { Biome1Border } from './biome1Border';
-import { Biome3Border } from './biome3Border';
-import { Biome4Border } from './biome4Border';
+import bushSpr from '../content/bushSpr.png'; 
+import { HomeMapBorder } from './homeMapBorder'; 
 import steel2png3 from '../content/steel2png3.png';
 import steel4img1 from '../content/steel4img1.png';
 import steel4img2 from '../content/steel4img2.png';
 import steel4img3 from '../content/steel4img3.png';
 
-import {steel4img} from '../content/steel4img.png';
+import { steel4img } from '../content/steel4img.png';
 import { Biome3 } from './biome3';
 import { Biome4 } from './biome4';
 import steelTilemid from '../content/steelTilemid.png';
@@ -60,7 +56,7 @@ export class SceneMain extends Phaser.Scene {
         gradientAreaCoordinates: { x: number, y: number }[]
         centroid: { x: number, y: number }
     }[];
-    lootBoxes:{ x: number; y: number }[] = [];
+    lootBoxes: { x: number; y: number }[] = [];
     chunks: any[]; // Add this line to declare the chunks property
     followPoint: Phaser.Math.Vector2; // Declare followPoint property
     player: Phaser.GameObjects.Sprite; // Declare player property
@@ -96,12 +92,12 @@ export class SceneMain extends Phaser.Scene {
         this.load.image("asset2", asset2);
         this.load.image("asset3", asset3);
         this.load.image("steelTile", steelTile);
-        this.load.image("steelTilemid",steelTilemid);
-        this.load.image("steelTilebase",steelTilebase);
-        this.load.image("steel2png3",steel2png3);
-        this.load.image("steel4img1",steel4img1);
-        this.load.image("steel4img2",steel4img2);
-        this.load.image("steel4img3",steel4img3);
+        this.load.image("steelTilemid", steelTilemid);
+        this.load.image("steelTilebase", steelTilebase);
+        this.load.image("steel2png3", steel2png3);
+        this.load.image("steel4img1", steel4img1);
+        this.load.image("steel4img2", steel4img2);
+        this.load.image("steel4img3", steel4img3);
         this.load.image("sprHighland", sprHighland);
         this.load.image("icedLake", icedLake);
         this.load.spritesheet('adventurer', adventurer, {
@@ -295,45 +291,36 @@ export class SceneMain extends Phaser.Scene {
         }
     }
 
-    isWithinBounds(chunkX: number, chunkY: number): { withinBounds: boolean; biomeType?: string ;index?:number} {
-        const chunkCenterX = chunkX * this.chunkSize * this.tileSize;
-        const chunkCenterY = chunkY * this.chunkSize * this.tileSize;
+    isWithinBounds(chunkX: number, chunkY: number): { withinBounds: boolean; biomeType?: string; index?: number } {
+        const chunkSizeInPixels = this.chunkSize * this.tileSize;
+        const chunkCorners = [
+            { x: chunkX * chunkSizeInPixels, y: chunkY * chunkSizeInPixels },
+            { x: (chunkX + 1) * chunkSizeInPixels, y: chunkY * chunkSizeInPixels },
+            { x: chunkX * chunkSizeInPixels, y: (chunkY + 1) * chunkSizeInPixels },
+            { x: (chunkX + 1) * chunkSizeInPixels, y: (chunkY + 1) * chunkSizeInPixels }
+        ];
 
         for (let polygon of this.vertices) {
-            if (this.point_in_polygon({ x: chunkCenterX, y: chunkCenterY }, polygon.reducedVertices)) {
-                var type;
+            for (let corner of chunkCorners) {
+                if (this.point_in_polygon(corner, polygon.gradientAreaCoordinates)) {
+                    var type;
 
-                if (polygon.index>= 0 && polygon.index < 5) {
-                    type = "steel";
+                    if (polygon.index >= 0 && polygon.index < 5) {
+                        type = "steel";
+                    }
+                    else if (polygon.index >= 5 && polygon.index < 10) {
+                        type = "ground";
+                    }
+                    else if (polygon.index >= 10 && polygon.index < 15) {
+                        type = "flying";
+                    }
+                    else {
+                        type = "psychic";
+                    }
+                    return { withinBounds: true, biomeType: type, index: polygon.index };
                 }
-                else if (polygon.index >= 5 && polygon.index < 10) {
-                    type = "ground";
-                }
-                else if(polygon.index >= 10 && polygon.index < 15){
-                    type = "flying"; 
-                }
-                else{
-                    type = "psychic";
-                }
-                return { withinBounds: true, biomeType: type, index:polygon.index };
             }
-            else if(this.point_in_polygon({ x: chunkCenterX, y: chunkCenterY }, polygon.gradientAreaCoordinates)){
-                var type;
 
-                if (polygon.index>= 0 && polygon.index < 5) {
-                    type = "steelBorder";
-                }
-                else if (polygon.index >= 5 && polygon.index < 10) {
-                    type = "groundBorder";
-                }
-                else if(polygon.index >= 10 && polygon.index < 15){
-                    type = "flyingBorder"; 
-                }
-                else{
-                    type = "psychicBorder";
-                }
-                return { withinBounds: true, biomeType: type , index:polygon.index};
-            }
         }
 
         return { withinBounds: false };
@@ -426,27 +413,7 @@ export class SceneMain extends Phaser.Scene {
                                     throw new Error('Expected result.index to be a number');
                                 }
                                 //console.log('grassBorder');
-                                break;
-                            case 'steelBorder':
-                                if (typeof result.index === 'number') {
-                                    newChunk = new Biome1Border(this, x, y, this.chunkSize, this.tileSize, result.index);
-                                } else {
-                                    throw new Error('Expected result.index to be a number');
-                                }
-                                //console.log('homeBorder');
-                                break;
-                            case 'flyingBorder':
-                                newChunk = new Biome3Border(this, x, y, this.chunkSize, this.tileSize);
-                                //console.log('sandBorder');
-                                break;
-                            case 'psychicBorder':
-                                newChunk = new Biome4Border(this, x, y, this.chunkSize, this.tileSize);
-                                //console.log('grassBorder');
-                                break;
-                            case 'groundBorder':
-                                newChunk = new Biome2Border(this, x, y, this.chunkSize, this.tileSize);
-                                //console.log('homeBorder');
-                                break;
+                                break; 
 
                             default:
                                 throw new Error(`Unknown biome type: ${result.biomeType}`);
@@ -467,7 +434,7 @@ export class SceneMain extends Phaser.Scene {
                 snappedChunkY,
                 chunk.x,
                 chunk.y
-            ) < 11) {
+            ) < 3) {
                 if (chunk !== null) {
                     chunk.load();
                 }
@@ -504,7 +471,7 @@ export class SceneMain extends Phaser.Scene {
                 this.player.body.setVelocityX(0);
                 this.player.body.setVelocityY(0);
                 this.player.play('idle', true);
-            } 
+            }
         }
 
         // console.log(this.player.x, this.player.y);

@@ -47,8 +47,14 @@ class Biome4 {
                 for (var y = 0; y < this.chunkSize; y++) {
                     var tileX = (this.x * (this.chunkSize * this.tileSize)) + (x * this.tileSize);
                     var tileY = (this.y * (this.chunkSize * this.tileSize)) + (y * this.tileSize);
-                    if (!this.isWithinBounds(tileX, tileY)) {
+                    if (!this.isWithinBounds(tileX, tileY) && !this.isBorderBounds(tileX, tileY)) {
                         continue; // Skip tiles that are not within bounds
+                    }
+                    if(this.isBorderBounds(tileX, tileY) && !this.isWithinBounds(tileX, tileY)){
+                        const key = "bush";  
+                        var tile = new Tile(this.scene, tileX, tileY, key); 
+                        this.tiles.add(tile);
+                        continue;
                     }
 
                     var perlinValue = this.perlin.perlin2(tileX / 500, tileY / 500);
@@ -154,6 +160,15 @@ class Biome4 {
 
             this.isLoaded = true;
         }
+    }
+    isBorderBounds(x: number, y: number): boolean {
+        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].gradientAreaCoordinates)) {
+            console.log("inside");
+            return true;
+        }
+
+        console.log("outside");
+        return false;
     }
     isWithinBounds(x: number, y: number): boolean {
         if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].reducedVertices)) {
