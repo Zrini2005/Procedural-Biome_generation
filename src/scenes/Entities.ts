@@ -173,7 +173,7 @@ class Biome1 {
         }
     }
     isBorderBounds(x: number, y: number): boolean {
-        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].gradientAreaCoordinates)) {
+        if (this.point_in_polygon({ x, y }, this.scene.polygonData[this.polygonIdx].gradientAreaCoordinates)) {
             console.log("inside");
             return true;
         }
@@ -182,12 +182,12 @@ class Biome1 {
         return false;
     }
     isWithinBounds(x: number, y: number): boolean {
-        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].reducedVertices)) {
-            console.log("inside");
+        if (this.point_in_polygon({ x, y }, this.scene.polygonData[this.polygonIdx].reducedVertices)) {
+            //console.log("inside");
             return true;
         }
 
-        console.log("outside");
+        //console.log("outside");
         return false;
     }
 
@@ -269,7 +269,7 @@ class Biome1 {
     }
     isNearDungeon(x: number, y: number): boolean {
         const dungeonRadius = 100; // Adjust this value as needed
-        for (let polygon of this.scene.vertices) {
+        for (let polygon of this.scene.polygonData) {
             const center = polygon.centroid;
             const distance = Phaser.Math.Distance.Between(x, y, center.x, center.y);
             if (distance < dungeonRadius) {

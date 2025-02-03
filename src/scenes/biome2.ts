@@ -166,7 +166,7 @@ class Biome2 {
         }
     }
     isBorderBounds(x: number, y: number): boolean {
-        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].gradientAreaCoordinates)) {
+        if (this.point_in_polygon({ x, y }, this.scene.polygonData[this.polygonIdx].gradientAreaCoordinates)) {
             console.log("inside");
             return true;
         }
@@ -175,7 +175,7 @@ class Biome2 {
         return false;
     }
     isWithinBounds(x: number, y: number): boolean {
-        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].reducedVertices)) {
+        if (this.point_in_polygon({ x, y }, this.scene.polygonData[this.polygonIdx].reducedVertices)) {
             console.log("inside");
             return true;
         }

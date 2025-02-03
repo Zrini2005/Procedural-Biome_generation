@@ -11,7 +11,7 @@ import asset1 from '../content/asset1.png';
 import asset2 from '../content/asset2.png';
 import asset3 from '../content/asset3.png';
 import sprNewTry from '../content/sprNewTry.png';
-import sprWater from '../content/sprWater.png';
+// import sprWater from '../content/sprWater.png';
 import smallHouse from '../content/smallHouse.png';
 import dungeon from '../content/dungeon.png';
 import mountain_landscape from '../content/mountain_landscape.png';
@@ -36,6 +36,18 @@ import steelTilebase from '../content/steelTilebase.png';
 import steelTile from '../content/steelTile.png';
 import tileset from '../content/tileset/tileset.png'
 import teleporter from '../content/tileset/teleporter.json'
+import psychicTile1 from '../content/psychicTile1.png';
+import psychicTree1 from '../content/psychicTree1.png';
+import psychicTree2 from '../content/psychicTree2.png';
+import psychicTree3 from '../content/psychicTree3.png';
+import purple1 from '../content/purple1.png';
+import purple2 from '../content/purple2.png';
+import psychicLake from '../content/psychicLake.png';
+import sprWater from '../content/sprWater.png';
+import cloudBorder from '../content/cloudBorder.png';
+import cloudBorder1 from '../content/cloudBorder1.png';
+import psychicBorder from '../content/psychicBorder.png';
+
 
 export class SceneMain extends Phaser.Scene {
     resolution: number = 3000;
@@ -44,8 +56,8 @@ export class SceneMain extends Phaser.Scene {
     mapSize: number;
     chunkSize: number;
     tileSize: number;
-    cameraSpeed: number;
-    vertices: {
+    playerSpeed: number;
+    polygonData: {
         index: number,
         polygonIndex: number,
         vertices: { x: number, y: number }[],
@@ -75,7 +87,7 @@ export class SceneMain extends Phaser.Scene {
             frameHeight: 16
         });
         this.load.image("sprSand", sprSand);
-        // this.load.image("sprGrass", sprGrass);
+        this.load.image("sprGrasss", sprGrass);
         this.load.image("sprGrass", grassSpr);
         this.load.image("tree1", tree1);
         this.load.image("tree2", tree2);
@@ -102,7 +114,21 @@ export class SceneMain extends Phaser.Scene {
             frameWidth: 256, // Width of a single frame
             frameHeight: 256, // Height of a single frame
         });
+        this.load.spritesheet("sprWater", "content/sprWater.png", {
+            frameWidth: 16,
+            frameHeight: 16
+          });
+        this.load.image("purple1", purple1);
+        this.load.image("purple2", purple2);
+        this.load.image("psychicTile1", psychicTile1);
+        this.load.image("psychicTree1", psychicTree1);
+        this.load.image("psychicTree2", psychicTree2);
+        this.load.image("psychicLake",psychicLake);
+        this.load.image("psychicTree3", psychicTree3);
         this.load.image("grassbase", grassbase);
+        this.load.image("cloudBorder", cloudBorder);
+        this.load.image("cloudBorder1", cloudBorder1);
+        this.load.image("psychicBorder", psychicBorder);
         this.indices = randomWalkGen()
 
         this.load.image("tileset", tileset);
@@ -112,6 +138,12 @@ export class SceneMain extends Phaser.Scene {
     create() {
         // Player animations
         // Define animations
+        this.anims.create({
+            key: "sprWater",
+            frames: this.anims.generateFrameNumbers("sprWater"),
+            frameRate: 5,
+            repeat: -1
+          });
         this.anims.create({
             key: 'walk-up',
             frames: this.anims.generateFrameNumbers('adventurer', { start: 0, end: 15, first: 0 }),
@@ -158,12 +190,12 @@ export class SceneMain extends Phaser.Scene {
         this.mapSize = 1000;
         this.chunkSize = 16;
         this.tileSize = 16;
-        this.cameraSpeed = 1000;
+        this.playerSpeed = 1000;
         const polygons = voronoi.cellPolygons();
         calculatePolygonData(polygons);
 
-        this.vertices = polygonData;
-        this.vertices.forEach(vertex => {
+        this.polygonData = polygonData;
+        this.polygonData.forEach(vertex => {
             vertex.vertices = vertex.vertices.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
             vertex.reducedVertices = vertex.reducedVertices.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
             vertex.lootBoxesCoordinates = vertex.lootBoxesCoordinates.map(v => ({ x: v.x * this.resolution, y: v.y * this.resolution }));
@@ -173,10 +205,10 @@ export class SceneMain extends Phaser.Scene {
         console.log(polygonData);
 
         // Start the player and cam at center of home base
-        const startX = this.vertices[0].centroid.x;
-        const startY = this.vertices[0].centroid.y;
+        const startX = this.polygonData[0].centroid.x;
+        const startY = this.polygonData[0].centroid.y;
 
-        this.cameras.main.setZoom(2);
+        this.cameras.main.setZoom(1);
         this.followPoint = new Phaser.Math.Vector2(
             startX, startY
         );
@@ -212,7 +244,7 @@ export class SceneMain extends Phaser.Scene {
 
         tree.body.setSize(tree.width, tree.height); // Resize physics body
         this.collidableObjects.add(tree);
-        this.physics.world.drawDebug = true;
+        this.physics.world.drawDebug = false;
         this.physics.world.debugGraphic.clear();
 
         // Add collider with debug log
@@ -242,7 +274,7 @@ export class SceneMain extends Phaser.Scene {
     addLootBoxes() {
         const minDistance = 1000; // Minimum allowed distance between loot boxes
 
-        for (let polygon of this.vertices) {
+        for (let polygon of this.polygonData) {
             const validLootBoxes: { x: number; y: number }[] = [];
 
             for (let lootBox of polygon.lootBoxesCoordinates) {
@@ -273,7 +305,7 @@ export class SceneMain extends Phaser.Scene {
     }
 
     placeDungeonAtPolygonCenters() {
-        for (let polygon of this.vertices) {
+        for (let polygon of this.polygonData) {
             const center = polygon.centroid;
             console.log("centre:", center);
 
@@ -299,7 +331,7 @@ export class SceneMain extends Phaser.Scene {
             { x: (chunkX + 1) * chunkSizeInPixels, y: (chunkY + 1) * chunkSizeInPixels }
         ];
 
-        for (let polygon of this.vertices) {
+        for (let polygon of this.polygonData) {
             for (let corner of chunkCorners) {
                 if (this.point_in_polygon(corner, polygon.gradientAreaCoordinates)) {
                     var type;
@@ -447,22 +479,22 @@ export class SceneMain extends Phaser.Scene {
 
         if (this.player && this.player.body instanceof Phaser.Physics.Arcade.Body) {
             if (this.keyW.isDown) {
-                this.player.body.setVelocityY(-this.cameraSpeed);
+                this.player.body.setVelocityY(-this.playerSpeed);
                 this.player.body.setVelocityX(0);
 
                 this.player.play('walk-up', true);
             } else if (this.keyS.isDown) {
-                this.player.body.setVelocityY(this.cameraSpeed)
+                this.player.body.setVelocityY(this.playerSpeed)
                 this.player.body.setVelocityX(0);
 
                 this.player.play('walk-down', true);
             } else if (this.keyA.isDown) {
-                this.player.body.setVelocityX(-this.cameraSpeed)
+                this.player.body.setVelocityX(-this.playerSpeed)
                 this.player.body.setVelocityY(0);
 
                 this.player.play('walk-left', true);
             } else if (this.keyD.isDown) {
-                this.player.body.setVelocityX(this.cameraSpeed)
+                this.player.body.setVelocityX(this.playerSpeed)
                 this.player.body.setVelocityY(0);
 
                 this.player.play('walk-right', true);

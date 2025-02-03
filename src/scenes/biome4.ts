@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
-import { Tile } from './Entities'; 
-import { SceneMain } from '../scenes/SceneMain'; 
+import { Tile } from './Entities';
+import { SceneMain } from '../scenes/SceneMain';
 import Perlin from '../helpers/perlin';
- 
+
 class Biome4 {
     scene: SceneMain;
     x: number;
@@ -50,9 +50,14 @@ class Biome4 {
                     if (!this.isWithinBounds(tileX, tileY) && !this.isBorderBounds(tileX, tileY)) {
                         continue; // Skip tiles that are not within bounds
                     }
-                    if(this.isBorderBounds(tileX, tileY) && !this.isWithinBounds(tileX, tileY)){
-                        const key = "bush";  
-                        var tile = new Tile(this.scene, tileX, tileY, key); 
+                    if (this.isBorderBounds(tileX, tileY) && !this.isWithinBounds(tileX, tileY)) {
+                        const key = "cloudBorder1";
+                        var tile = new Tile(this.scene, tileX, tileY, key);
+                        // const assetWidth = this.scene.textures.get(key).getSourceImage().width;
+                        // const assetHeight = this.scene.textures.get(key).getSourceImage().height;
+                        // const scaleX = 16 / assetWidth;
+                        // const scaleY = 16 / assetHeight;
+                        // tile.setScale(scaleX, scaleY);
                         this.tiles.add(tile);
                         continue;
                     }
@@ -68,12 +73,14 @@ class Biome4 {
                     //   waterTiles.push({ x: tileX, y: tileY });
                     // }
                     if (perlinValue < 0.1) {
-                        key = "sprSand";
+                        key = "sprGrasss";
                     } else if (perlinValue >= 0.1 && perlinValue < 0.2) {
                         key = "sprSand";
 
                     } else if (perlinValue >= 0.2) {
-                        key = "sprSand";
+                        key = "sprWater";
+                        animationKey = "sprWater";
+
                     }
 
                     // Add the main tile sprite
@@ -162,7 +169,7 @@ class Biome4 {
         }
     }
     isBorderBounds(x: number, y: number): boolean {
-        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].gradientAreaCoordinates)) {
+        if (this.point_in_polygon({ x, y }, this.scene.polygonData[this.polygonIdx].gradientAreaCoordinates)) {
             console.log("inside");
             return true;
         }
@@ -171,7 +178,7 @@ class Biome4 {
         return false;
     }
     isWithinBounds(x: number, y: number): boolean {
-        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].reducedVertices)) {
+        if (this.point_in_polygon({ x, y }, this.scene.polygonData[this.polygonIdx].reducedVertices)) {
             console.log("inside");
             return true;
         }

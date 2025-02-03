@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import { Tile } from './Entities';
 import Perlin from '../helpers/perlin';
-import { SceneMain } from '../scenes/SceneMain'; 
- 
+import { SceneMain } from '../scenes/SceneMain';
+
 class Biome3 {
     scene: SceneMain;
     x: number;
@@ -50,9 +50,14 @@ class Biome3 {
                     if (!this.isWithinBounds(tileX, tileY) && !this.isBorderBounds(tileX, tileY)) {
                         continue; // Skip tiles that are not within bounds
                     }
-                    if(this.isBorderBounds(tileX, tileY) && !this.isWithinBounds(tileX, tileY)){
-                        const key = "bush";  
-                        var tile = new Tile(this.scene, tileX, tileY, key); 
+                    if (this.isBorderBounds(tileX, tileY) && !this.isWithinBounds(tileX, tileY)) {
+                        const key = "psychicBorder";
+                        var tile = new Tile(this.scene, tileX, tileY, key);
+                        const assetWidth = this.scene.textures.get(key).getSourceImage().width;
+                        const assetHeight = this.scene.textures.get(key).getSourceImage().height;
+                        const scaleX = 25 / assetWidth;
+                        const scaleY = 25 / assetHeight;
+                        tile.setScale(scaleX, scaleY);
                         this.tiles.add(tile);
                         continue;
                     }
@@ -68,17 +73,24 @@ class Biome3 {
                     //   waterTiles.push({ x: tileX, y: tileY });
                     // }
                     if (perlinValue < 0.1) {
-                        key = "icedLake";
+                        key = "psychicTile1";
+                        waterTiles.push({ x: tileX, y: tileY });
                     } else if (perlinValue >= 0.1 && perlinValue < 0.2) {
-                        key = "icedLake";
+                        key = "purple2";
 
                     } else if (perlinValue >= 0.2) {
-                        key = "icedLake";
+                        key = "purple1";
+                        grassTiles.push({ x: tileX, y: tileY });
                     }
 
                     // Add the main tile sprite
                     var tile = new Tile(this.scene, tileX, tileY, key);
                     //tile.setScale(2,2);
+                    const assetWidth = this.scene.textures.get(key).getSourceImage().width;
+                    const assetHeight = this.scene.textures.get(key).getSourceImage().height;
+                    const scaleX = this.scene.tileSize / assetWidth;
+                    const scaleY = this.scene.tileSize / assetHeight;
+                    tile.setScale(scaleX, scaleY);
 
 
                     if (animationKey !== "") {
@@ -92,22 +104,33 @@ class Biome3 {
             // Step 2: Place trees on grass tiles
             grassTiles.forEach(grassTile => {
                 var treeNoise = this.perlin.perlin2(grassTile.x / 50, grassTile.y / 50); // Use finer noise for tree placement
-                if (treeNoise > 0.2) {
+                if (treeNoise > 0.4) {
                     var treeType;
-                    if (treeNoise <= 0.3) {
-                        treeType = "tree1";
-                    } else if (treeNoise <= 0.4) {
-                        treeType = "tree2";
+                    if (treeNoise <= 0.5) {
+                        treeType = "psychicTree1";
+                    } else if (treeNoise <= 0.6) {
+                        treeType = "psychicTree2";
                     } else {
-                        treeType = "tree3";
+                        treeType = "psychicTree3";
                     }
 
                     // Add tree sprite with proper scaling
                     const assetWidth = this.scene.textures.get(treeType).getSourceImage().width;
                     const assetHeight = this.scene.textures.get(treeType).getSourceImage().height;
 
-                    const scaleX = 0.05 + this.tileSize / assetWidth;
-                    const scaleY = 0.05 + this.tileSize / assetHeight;
+                    let scaleX, scaleY;
+                    if (treeType == "psychicTree1") {
+                        scaleX = 0.15 + this.tileSize / assetWidth;
+                        scaleY = 0.15 + this.tileSize / assetHeight;
+                    }
+                    else if (treeType == "psychicTree2") {
+                        scaleX = 0.05 + this.tileSize / assetWidth;
+                        scaleY = 0.05 + this.tileSize / assetHeight;
+                    }
+                    else {
+                        scaleX = 0.3 + this.tileSize / assetWidth;
+                        scaleY = 0.3 + this.tileSize / assetHeight;
+                    }
                     var tree = new Phaser.GameObjects.Sprite(this.scene, grassTile.x + 8, grassTile.y + 8, treeType); // Centered on the tile
                     tree.setOrigin(0.5, 1); // Align the tree's bottom to the tile
                     tree.setDepth(8); // Sort by Y position
@@ -162,7 +185,7 @@ class Biome3 {
         }
     }
     isBorderBounds(x: number, y: number): boolean {
-        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].gradientAreaCoordinates)) {
+        if (this.point_in_polygon({ x, y }, this.scene.polygonData[this.polygonIdx].gradientAreaCoordinates)) {
             console.log("inside");
             return true;
         }
@@ -171,7 +194,7 @@ class Biome3 {
         return false;
     }
     isWithinBounds(x: number, y: number): boolean {
-        if (this.point_in_polygon({ x, y }, this.scene.vertices[this.polygonIdx].reducedVertices)) {
+        if (this.point_in_polygon({ x, y }, this.scene.polygonData[this.polygonIdx].reducedVertices)) {
             console.log("inside");
             return true;
         }
@@ -216,12 +239,14 @@ class Biome3 {
 
         // Determine which asset to place based on hash value
         if (hashValue > 0.1 && hashValue <= 0.105) {
-            assetType = "asset1";
-        } else if (hashValue > 0.5 && hashValue <= 0.505) {
-            assetType = "asset2";
-        } else if (hashValue > 0.995) {
-            assetType = "asset3";
-        } else {
+            assetType = "psychicLake";
+        }
+        // else if (hashValue > 0.5 && hashValue <= 0.505) {
+        //     assetType = "asset2";
+        // } else if (hashValue > 0.995) {
+        //     assetType = "asset3";
+        // }
+        else {
             return; // No asset to place for this tile
         }
 
